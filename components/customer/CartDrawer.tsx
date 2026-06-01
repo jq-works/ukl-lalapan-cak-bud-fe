@@ -266,8 +266,8 @@ export function CartDrawer() {
                         <User className="w-3.5 h-3.5" />
                         <span>Checkout Member</span>
                       </div>
-                      <p className="text-stone-600">Pemesanan atas nama: <span className="font-semibold text-stone-900">{user.name}</span></p>
-                      {user.phone && <p className="text-stone-500">Nomor WhatsApp: <span className="font-semibold text-stone-850">{user.phone}</span></p>}
+                      <p className="text-stone-600">Pemesanan atas nama: <span className="font-semibold text-stone-900">{user?.name}</span></p>
+                      {user?.phone && <p className="text-stone-500">Nomor WhatsApp: <span className="font-semibold text-stone-850">{user?.phone}</span></p>}
                     </div>
                   ) : checkoutMode === "member" ? (
                     /* Guest wants member checkout but has no account */
