@@ -4,9 +4,13 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { FiUser, FiMail, FiLock, FiPhone, FiEye, FiEyeOff, FiArrowLeft, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
-import { MdRestaurantMenu } from "react-icons/md";
-import { GiChiliPepper } from "react-icons/gi";
+import CustomerNavbar from "@/components/customer/navbar";
+import { BottomNav } from "@/components/customer/BottomNav";
+import CustomerFooter from "@/components/customer/Footer";
+import { FloatingCartBtn } from "@/components/customer/FloatingCartBtn";
+import { CartDrawer } from "@/components/customer/CartDrawer";
+import { FiUser, FiMail, FiLock, FiPhone, FiEye, FiEyeOff, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function RegisterPage() {
   const { register, isAuthenticated, isLoading, error, setError } = useAuth();
@@ -66,199 +70,183 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center items-center px-4 py-12 overflow-hidden bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800">
+    <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
+      <CustomerNavbar />
       
-      {/* Dot Grid Background Pattern */}
-      <div 
-        className="absolute inset-0 opacity-[0.07] pointer-events-none"
-        style={{
-          backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-          backgroundSize: "24px 24px"
-        }}
-      />
-
-      {/* Decorative Blur Blobs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary-500/20 blur-3xl pointer-events-none animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-accent-500/10 blur-3xl pointer-events-none" />
-
-      {/* Floating Traditional Food Visual Accent */}
-      <div className="absolute -top-16 -right-16 w-64 h-64 border border-white/5 rounded-full bg-white/2 opacity-[0.03] pointer-events-none flex items-center justify-center">
-        <GiChiliPepper className="text-white text-9xl rotate-45 transform translate-y-6 -translate-x-6" />
-      </div>
-      <div className="absolute -bottom-24 -left-24 w-80 h-80 border border-white/5 rounded-full bg-white/2 opacity-[0.03] pointer-events-none flex items-center justify-center">
-        <MdRestaurantMenu className="text-white text-9xl -rotate-12" />
-      </div>
-
-      {/* Back button */}
-      <Link 
-        href="/"
-        className="absolute top-6 left-6 flex items-center gap-2 text-white/70 hover:text-white bg-white/5 border border-white/10 hover:bg-white/15 px-4 py-2 rounded-xl transition-all duration-200 backdrop-blur-sm text-sm"
-      >
-        <FiArrowLeft className="w-4 h-4" />
-        Kembali ke Beranda
-      </Link>
-
-      <div className="w-full max-w-md z-10 transition-all duration-300">
-        
-        {/* Logo and Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md shadow-lg mb-4 text-primary-400">
-            <span className="text-3xl">🍃</span>
+      <main className="max-w-md w-full mx-auto px-4 pt-10 pb-32 flex-grow flex flex-col justify-center">
+        <div className="fade-in space-y-6 w-full">
+          
+          {/* Logo and Brand */}
+          <div className="text-center">
+            <img 
+              src="/images/logo_cakbud.png" 
+              alt="Logo Cak Bud" 
+              className="h-16 w-auto object-contain mx-auto mb-3 select-none pointer-events-none"
+            />
+            <h1 className="text-2xl font-extrabold text-stone-900 tracking-tight">
+              Lalapan <span className="text-primary-500">Cak Bud</span>
+            </h1>
+            <p className="text-stone-500 text-xs mt-2">
+              Mulai nikmati kelezatan lalapan dengan akun member Anda.
+            </p>
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">
-            Lalapan <span className="text-primary-400">Cak Bud</span>
-          </h1>
-          <p className="text-white/60 text-sm mt-2">
-            Mulai nikmati kelezatan lalapan dengan akun member Anda.
-          </p>
-        </div>
 
-        {/* Glassmorphic Register Card */}
-        <div className="bg-white/10 border border-white/20 backdrop-blur-md rounded-2xl shadow-2xl p-8">
-          {isSuccess ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <FiCheckCircle className="w-10 h-10 animate-bounce" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Registrasi Berhasil!</h3>
-                <p className="text-white/60 text-xs mt-1">
-                  Mengarahkan Anda ke halaman login...
-                </p>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
-              {/* Error Message */}
-              {(localError || error) && (
-                <div className="flex items-start gap-2 bg-accent-500/20 border border-accent-500/30 text-white rounded-xl p-3 text-xs leading-relaxed">
-                  <FiAlertCircle className="w-4 h-4 text-accent-400 shrink-0 mt-0.5" />
-                  <span>{localError || error}</span>
+          {/* Register Card */}
+          <div className="bg-white border border-stone-150 rounded-2xl shadow-sm p-6 sm:p-8 space-y-5">
+            {isSuccess ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-100 flex items-center justify-center">
+                  <FiCheckCircle className="w-10 h-10 animate-bounce" />
                 </div>
-              )}
-
-              {/* Name Field */}
-              <div className="space-y-1.5">
-                <label htmlFor="name" className="block text-xs font-semibold text-white/90">
-                  Nama Lengkap
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/50">
-                    <FiUser className="w-4 h-4" />
-                  </div>
-                  <input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Nama Anda"
-                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:bg-white/10 transition-all duration-200"
-                    required
-                  />
+                <div>
+                  <h3 className="text-base font-bold text-stone-900">Registrasi Berhasil!</h3>
+                  <p className="text-stone-400 text-xs mt-1">
+                    Mengarahkan Anda ke halaman login...
+                  </p>
                 </div>
               </div>
-
-              {/* Email Field */}
-              <div className="space-y-1.5">
-                <label htmlFor="email" className="block text-xs font-semibold text-white/90">
-                  Alamat Email
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/50">
-                    <FiMail className="w-4 h-4" />
-                  </div>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:bg-white/10 transition-all duration-200"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Phone Field */}
-              <div className="space-y-1.5">
-                <label htmlFor="phone" className="block text-xs font-semibold text-white/90">
-                  Nomor Telepon
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/50">
-                    <FiPhone className="w-4 h-4" />
-                  </div>
-                  <input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="08123456789"
-                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:bg-white/10 transition-all duration-200"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-1.5">
-                <label htmlFor="password" className="block text-xs font-semibold text-white/90">
-                  Kata Sandi
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/50">
-                    <FiLock className="w-4 h-4" />
-                  </div>
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent focus:bg-white/10 transition-all duration-200"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-white/50 hover:text-white"
-                  >
-                    {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Register CTA Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-12 rounded-xl bg-primary-500 hover:bg-primary-600 disabled:bg-primary-500/50 disabled:cursor-not-allowed text-white font-semibold shadow-lg shadow-primary-950/50 flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer mt-2"
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Mendaftarkan...</span>
-                  </div>
-                ) : (
-                  "Buat Akun Member"
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                
+                {/* Error Message */}
+                {(localError || error) && (
+                  <Alert variant="destructive" className="animate-shake">
+                    <FiAlertCircle className="w-4 h-4 mt-0.5" />
+                    <div className="flex flex-col gap-0.5">
+                      <AlertTitle>Pendaftaran Gagal</AlertTitle>
+                      <AlertDescription>{localError || error}</AlertDescription>
+                    </div>
+                  </Alert>
                 )}
-              </button>
-            </form>
-          )}
 
-          {/* Redirection Links */}
-          <div className="mt-6 text-center text-xs text-white/60">
-            Sudah memiliki akun?{" "}
-            <Link 
-              href="/login" 
-              className="text-primary-400 hover:text-primary-300 font-semibold underline underline-offset-4 transition-colors"
-            >
-              Masuk Disini
-            </Link>
+                {/* Name Field */}
+                <div className="space-y-1.5">
+                  <label htmlFor="name" className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                    Nama Lengkap
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                      <FiUser className="w-4 h-4" />
+                    </div>
+                    <input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Nama Lengkap Anda"
+                      className="w-full h-11 bg-stone-50/50 border border-stone-250 rounded-xl pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500 focus:bg-white transition-all duration-200"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Email Field */}
+                <div className="space-y-1.5">
+                  <label htmlFor="email" className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                    Alamat Email
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                      <FiMail className="w-4 h-4" />
+                    </div>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="nama@email.com"
+                      className="w-full h-11 bg-stone-50/50 border border-stone-250 rounded-xl pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500 focus:bg-white transition-all duration-200"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Field */}
+                <div className="space-y-1.5">
+                  <label htmlFor="phone" className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                    Nomor WhatsApp
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                      <FiPhone className="w-4 h-4" />
+                    </div>
+                    <input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="08123456789"
+                      className="w-full h-11 bg-stone-50/50 border border-stone-250 rounded-xl pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500 focus:bg-white transition-all duration-200"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Password Field */}
+                <div className="space-y-1.5">
+                  <label htmlFor="password" className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                    Kata Sandi
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                      <FiLock className="w-4 h-4" />
+                    </div>
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full h-11 bg-stone-50/50 border border-stone-250 rounded-xl pl-10 pr-10 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500 focus:bg-white transition-all duration-200"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-600"
+                    >
+                      {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Register CTA Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-11 rounded-xl bg-primary-500 hover:bg-primary-600 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold shadow-md shadow-green-200/50 flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer mt-2 text-xs"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Mendaftarkan...</span>
+                    </div>
+                  ) : (
+                    "Buat Akun Member"
+                  )}
+                </button>
+              </form>
+            )}
+
+            {/* Redirection Links */}
+            <div className="text-center text-xs text-stone-500 pt-2">
+              Sudah memiliki akun?{" "}
+              <Link 
+                href="/login" 
+                className="text-primary-500 hover:underline font-bold transition-colors"
+              >
+                Masuk Disini
+              </Link>
+            </div>
           </div>
+
         </div>
-      </div>
+      </main>
+
+      <CustomerFooter />
+      <FloatingCartBtn />
+      <CartDrawer />
+      <BottomNav />
     </div>
   );
 }

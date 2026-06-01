@@ -9,6 +9,17 @@ import {
   FiSearch, FiFilter, FiEdit, FiTrash2, FiCalendar, FiUser
 } from "react-icons/fi";
 import { MdOutlineFoodBank, MdOutlineFastfood } from "react-icons/md";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Mock initial orders for dashboard
 interface Order {
@@ -47,6 +58,7 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
   // Secure route: check auth status
   useEffect(() => {
@@ -85,11 +97,7 @@ export default function AdminDashboard() {
     setEditingOrder(null);
   };
 
-  const handleDeleteOrder = (id: string) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus pesanan ${id}?`)) {
-      setOrders(prev => prev.filter(o => o.id !== id));
-    }
-  };
+
 
   const filteredOrders = orders.filter(o => {
     const matchesSearch = o.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -106,11 +114,15 @@ export default function AdminDashboard() {
       <aside className="w-64 fixed inset-y-0 left-0 bg-white border-r border-stone-200 flex flex-col justify-between z-20">
         <div>
           {/* Logo Area */}
-          <div className="h-16 border-b border-stone-200 flex items-center px-6 gap-3">
-            <span className="text-2xl">🍃</span>
+          <div className="h-16 border-b border-stone-200 flex items-center px-6 gap-2">
+            <img 
+              src="/images/logo_cakbud.png" 
+              alt="Logo Cak Bud" 
+              className="h-9 w-auto object-contain select-none pointer-events-none"
+            />
             <div>
-              <h1 className="font-extrabold text-stone-900 text-sm leading-none">Cak Bud Admin</h1>
-              <span className="text-[10px] text-primary-500 font-semibold uppercase tracking-wider">Dashboard Panel</span>
+              <h1 className="font-extrabold text-stone-900 text-xs leading-none uppercase">Cak Bud Admin</h1>
+              <span className="text-[9px] text-primary-500 font-bold uppercase tracking-wider block mt-0.5">Dashboard Panel</span>
             </div>
           </div>
 
@@ -144,21 +156,21 @@ export default function AdminDashboard() {
               )}
             </button>
             <button
-              onClick={() => alert("Fitur Kelola Menu Makanan tersedia di tahap pengembangan berikutnya.")}
+              onClick={() => setInfoMessage("Fitur Kelola Menu Makanan tersedia di tahap pengembangan berikutnya.")}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-stone-500 hover:bg-stone-50 hover:text-stone-950 font-medium transition-all"
             >
               <FiShoppingBag className="w-4 h-4" />
               Kelola Menu
             </button>
             <button
-              onClick={() => alert("Fitur Data Pelanggan tersedia di tahap pengembangan berikutnya.")}
+              onClick={() => setInfoMessage("Fitur Data Pelanggan tersedia di tahap pengembangan berikutnya.")}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-stone-500 hover:bg-stone-50 hover:text-stone-950 font-medium transition-all"
             >
               <FiUsers className="w-4 h-4" />
               Pelanggan
             </button>
             <button
-              onClick={() => alert("Pengaturan sistem tersedia di tahap pengembangan berikutnya.")}
+              onClick={() => setInfoMessage("Pengaturan sistem tersedia di tahap pengembangan berikutnya.")}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-stone-500 hover:bg-stone-50 hover:text-stone-950 font-medium transition-all"
             >
               <FiSettings className="w-4 h-4" />
@@ -347,7 +359,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <button 
-                    onClick={() => alert("Fitur untuk menutup toko sementara dinonaktifkan.")}
+                    onClick={() => setInfoMessage("Fitur untuk menutup toko sementara dinonaktifkan.")}
                     className="w-full h-10 bg-white/10 border border-white/20 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer relative z-10"
                   >
                     Tutup Warung Sementara
@@ -445,13 +457,32 @@ export default function AdminDashboard() {
                                 >
                                   <FiEdit className="w-3.5 h-3.5" />
                                 </button>
-                                <button
-                                  onClick={() => handleDeleteOrder(order.id)}
-                                  className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
-                                  title="Hapus"
-                                >
-                                  <FiTrash2 className="w-3.5 h-3.5" />
-                                </button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button
+                                      className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
+                                      title="Hapus"
+                                    >
+                                      <FiTrash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Hapus Pesanan</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Apakah Anda yakin ingin menghapus data pesanan {order.id} dari antrean? Aksi ini tidak dapat dibatalkan.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Batal
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => setOrders(prev => prev.filter(o => o.id !== order.id))} className="bg-red-600 hover:bg-red-700 shadow-none">
+                                        Ya, Hapus
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             </td>
                           </tr>
@@ -527,6 +558,23 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Info Message Dialog — replaces native alert() */}
+      <AlertDialog open={!!infoMessage} onOpenChange={(open) => { if (!open) setInfoMessage(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Informasi</AlertDialogTitle>
+            <AlertDialogDescription>
+              {infoMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setInfoMessage(null)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );

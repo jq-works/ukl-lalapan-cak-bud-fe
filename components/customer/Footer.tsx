@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { FaMapMarkerAlt, FaPhone, FaInstagram, FaStar, FaLeaf, FaHeart, FaWhatsapp } from "react-icons/fa";
 import { FiClock } from "react-icons/fi";
@@ -12,9 +13,11 @@ const JAM_BUKA = [
 ];
 
 const QUICK_LINKS = [
-  { label: "Beranda",     tab: "home"    as const },
-  { label: "Pesanan Saya", tab: "orders" as const },
-  { label: "Akun Saya",  tab: "account" as const },
+  { label: "Beranda",     href: "/" },
+  { label: "Menu",        href: "/menu" },
+  { label: "Ulasan",      href: "/ulasan" },
+  { label: "Pesanan Saya", href: "/orders" },
+  { label: "Akun Saya",  href: "/account" },
 ];
 
 const CATEGORIES_DISPLAY = [
@@ -26,7 +29,8 @@ const CATEGORIES_DISPLAY = [
 
 /* ─── Component ───────────────────────────────────────────── */
 export default function CustomerFooter() {
-  const { setActiveTab } = useCart();
+  const { setActiveCategory } = useCart();
+  const router = useRouter();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -135,15 +139,15 @@ export default function CustomerFooter() {
                 Menu Utama
               </h3>
               <ul className="space-y-2">
-                {QUICK_LINKS.map(({ label, tab }) => (
-                  <li key={tab}>
-                    <button
-                      onClick={() => setActiveTab(tab)}
+                {QUICK_LINKS.map(({ label, href }) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
                       className="text-[13px] text-white hover:text-white/80 hover:translate-x-1.5 transition-all duration-200 flex items-center gap-2.5 cursor-pointer active:scale-95 font-medium"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-white" />
                       {label}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -157,7 +161,10 @@ export default function CustomerFooter() {
                 {CATEGORIES_DISPLAY.map(({ icon, label }) => (
                   <button
                     key={label}
-                    onClick={() => setActiveTab("home")}
+                    onClick={() => {
+                      setActiveCategory(label);
+                      router.push("/menu");
+                    }}
                     className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white bg-white/10 hover:bg-white hover:text-[#2d7a3e] border border-white/20 rounded-full px-3 py-1.5 transition-all duration-200 cursor-pointer active:scale-95"
                   >
                     <span className="text-xs leading-none">{icon}</span>

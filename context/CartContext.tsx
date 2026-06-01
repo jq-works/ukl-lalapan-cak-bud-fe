@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { FoodItem } from "@/lib/data";
 
 export interface CartItem {
@@ -19,6 +20,8 @@ export interface Order {
   date: string;
   time: string;
   estimatedTime: string;
+  phone?: string;
+  customerName?: string;
 }
 
 interface CartContextType {
@@ -36,7 +39,7 @@ interface CartContextType {
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  checkout: (guestDetails?: { name: string; phone: string }, note?: string) => Promise<boolean>;
+  checkout: (guestDetails?: { name: string; phone: string }, note?: string, initialStatus?: Order["status"]) => Promise<boolean>;
   reorder: (order: Order) => void;
 }
 
@@ -109,7 +112,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Simulate Order Lifecycle Updates
-  const startOrderSimulation = (orderId: string) => {
+  const startOrderSimulation = (orderId: string, startFromPaid: boolean = false) => {
     const updateStatus = (nextStatus: Order["status"], delay: number) => {
       setTimeout(() => {
         setOrders((prevOrders) =>
@@ -120,17 +123,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }, delay);
     };
 
-    // PAID after 4 seconds
-    updateStatus("PAID", 4000);
-    // PROCESSING after 9 seconds
-    updateStatus("PROCESSING", 9000);
-    // READY after 15 seconds
-    updateStatus("READY", 15000);
-    // COMPLETED after 22 seconds
-    updateStatus("COMPLETED", 22000);
+    if (startFromPaid) {
+      // PROCESSING after 5 seconds
+      updateStatus("PROCESSING", 5000);
+      // READY after 11 seconds
+      updateStatus("READY", 11000);
+      // COMPLETED after 18 seconds
+      updateStatus("COMPLETED", 18000);
+    } else {
+      // PAID after 4 seconds
+      updateStatus("PAID", 4000);
+      // PROCESSING after 9 seconds
+      updateStatus("PROCESSING", 9000);
+      // READY after 15 seconds
+      updateStatus("READY", 15000);
+      // COMPLETED after 22 seconds
+      updateStatus("COMPLETED", 22000);
+    }
   };
 
-  const checkout = async (guestDetails?: { name: string; phone: string }, note?: string): Promise<boolean> => {
+  const checkout = async (guestDetails?: { name: string; phone: string }, note?: string, initialStatus?: Order["status"]): Promise<boolean> => {
     if (cart.length === 0) return false;
 
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -138,15 +150,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const total = subtotal + serviceFee;
     const now = new Date();
     const orderId = `CB-${Math.floor(1000 + Math.random() * 9000)}`;
+    const savedUserStr = typeof window !== "undefined" ? localStorage.getItem("cakbud_user") : null;
+    let savedUser = null;
+    if (savedUserStr) {
+      try { savedUser = JSON.parse(savedUserStr); } catch (e) {}
+    }
+
+    const phone = guestDetails ? guestDetails.phone : (savedUser?.phone || "");
+    const customerName = guestDetails ? guestDetails.name : (savedUser?.name || "Member");
 
     const newOrder: Order = {
       id: orderId,
       items: [...cart],
       total: total,
-      status: "PENDING",
+      status: initialStatus || "PENDING",
       date: now.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
       time: now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
       estimatedTime: "20-30 Menit",
+      phone,
+      customerName,
     };
 
     try {
@@ -206,7 +228,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setActiveTab("orders"); // Redirect to orders tab immediately
 
     // Begin async simulation of order stages for demo
-    startOrderSimulation(newOrder.id);
+    startOrderSimulation(newOrder.id, initialStatus === "PAID");
     return true;
   };
 

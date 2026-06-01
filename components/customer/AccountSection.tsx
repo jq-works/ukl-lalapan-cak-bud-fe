@@ -4,16 +4,25 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { User, MapPin, Award, ShieldAlert, LogOut, ChevronRight, Gift, Lock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useCart } from "@/context/CartContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function AccountSection() {
   const { user, isAuthenticated, logout } = useAuth();
-  const { setActiveTab } = useCart();
   const router = useRouter();
 
   const handleLogout = () => {
     logout();
-    setActiveTab("home");
+    router.push("/");
   };
 
   if (!isAuthenticated || !user) {
@@ -69,9 +78,6 @@ export function AccountSection() {
     );
   }
 
-  // Determine loyalty level based on name length or mock rule
-  const isPlatinum = user.name.length > 5;
-
   return (
     <div className="space-y-6">
       {/* Profile Header Card */}
@@ -86,9 +92,9 @@ export function AccountSection() {
           <p className="text-xs text-stone-400 font-medium leading-none">
             {user.email} {user.phone && `· ${user.phone}`}
           </p>
-          <div className="inline-flex items-center gap-1 bg-primary-500/10 text-primary-750 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1.5 border border-primary-500/10">
+          <div className="inline-flex items-center gap-1 bg-primary-500/10 text-primary-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold mt-1.5 border border-primary-500/10">
             <Award className="w-3 h-3 fill-current text-primary-600" />
-            <span>Member {isPlatinum ? "Platinum" : "Silver"}</span>
+            <span>Member</span>
           </div>
         </div>
       </div>
@@ -102,7 +108,7 @@ export function AccountSection() {
           </div>
           <div>
             <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">Cak Bud Poin</p>
-            <p className="text-sm font-extrabold text-stone-800">{isPlatinum ? "1,240 Poin" : "350 Poin"}</p>
+            <p className="text-sm font-extrabold text-stone-800">350 Poin</p>
           </div>
         </div>
         
@@ -112,7 +118,7 @@ export function AccountSection() {
             <MapPin className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">Alamat Saya</p>
+            <p className="text-[10px] text-stone-450 font-bold uppercase tracking-wider">Alamat Saya</p>
             <p className="text-sm font-extrabold text-stone-800">2 Lokasi</p>
           </div>
         </div>
@@ -151,13 +157,30 @@ export function AccountSection() {
         </div>
 
         {/* Option 3: Logout Action */}
-        <div
-          onClick={handleLogout}
-          className="flex items-center gap-3 p-4 hover:bg-red-50 text-red-600 cursor-pointer transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          <span className="text-xs font-bold">Keluar Akun</span>
-        </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <div className="flex items-center gap-3 p-4 hover:bg-red-50 text-red-600 cursor-pointer transition-colors">
+              <LogOut className="w-4 h-4" />
+              <span className="text-xs font-bold">Keluar Akun</span>
+            </div>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Konfirmasi Keluar</AlertDialogTitle>
+              <AlertDialogDescription>
+                Apakah Anda yakin ingin keluar dari akun member Lalapan Cak Bud?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>
+                Batal
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-700 shadow-none">
+                Ya, Keluar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* App Version Info */}
