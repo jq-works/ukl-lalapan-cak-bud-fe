@@ -13,16 +13,16 @@ export function BottomNav() {
   ).length;
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-stone-100 flex items-center justify-around z-40 px-4 shadow-lg select-none pb-safe">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-t border-stone-150 flex items-center justify-around z-40 px-4 shadow-lg select-none pb-safe">
       {/* Beranda (Home) */}
       <button
         onClick={() => setActiveTab("home")}
         className={`flex flex-col items-center justify-center gap-1 w-20 h-full cursor-pointer transition-colors duration-200 ${
-          activeTab === "home" ? "text-[#2d7a3e]" : "text-stone-400"
+          activeTab === "home" ? "text-primary-500" : "text-stone-400"
         }`}
       >
         <Home className="w-5 h-5" />
-        <span className={`text-[11px] ${activeTab === "home" ? "font-semibold text-[#2d7a3e]" : "font-medium text-stone-400"}`}>
+        <span className={`text-[11px] ${activeTab === "home" ? "font-semibold text-primary-500" : "font-medium text-stone-400"}`}>
           Beranda
         </span>
       </button>
@@ -31,14 +31,14 @@ export function BottomNav() {
       <button
         onClick={() => setActiveTab("orders")}
         className={`flex flex-col items-center justify-center gap-1 w-20 h-full cursor-pointer relative transition-colors duration-200 ${
-          activeTab === "orders" ? "text-[#2d7a3e]" : "text-stone-400"
+          activeTab === "orders" ? "text-primary-500" : "text-stone-400"
         }`}
       >
         <ClipboardList className="w-5 h-5" />
         {activeOrdersCount > 0 && (
           <span className="absolute top-2 right-4 w-2 h-2 bg-[#c8102e] rounded-full animate-pulse" />
         )}
-        <span className={`text-[11px] ${activeTab === "orders" ? "font-semibold text-[#2d7a3e]" : "font-medium text-stone-400"}`}>
+        <span className={`text-[11px] ${activeTab === "orders" ? "font-semibold text-primary-500" : "font-medium text-stone-400"}`}>
           Pesanan
         </span>
       </button>
@@ -47,11 +47,11 @@ export function BottomNav() {
       <button
         onClick={() => setActiveTab("account")}
         className={`flex flex-col items-center justify-center gap-1 w-20 h-full cursor-pointer transition-colors duration-200 ${
-          activeTab === "account" ? "text-[#2d7a3e]" : "text-stone-400"
+          activeTab === "account" ? "text-primary-500" : "text-stone-400"
         }`}
       >
         <User className="w-5 h-5" />
-        <span className={`text-[11px] ${activeTab === "account" ? "font-semibold text-[#2d7a3e]" : "font-medium text-stone-400"}`}>
+        <span className={`text-[11px] ${activeTab === "account" ? "font-semibold text-primary-500" : "font-medium text-stone-400"}`}>
           Akun
         </span>
       </button>

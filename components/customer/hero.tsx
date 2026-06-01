@@ -44,25 +44,35 @@ export default function CustomerHero() {
     <section className="relative max-w-7xl mx-auto px-4 mt-8 mb-16">
       
       {/* Container Utama Banner (Original Large Dimension with Vignette) */}
-      <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden min-h-[340px] sm:min-h-[360px] md:min-h-[380px] lg:min-h-[420px] flex items-center shadow-lg bg-stone-950">
+      <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden min-h-[340px] sm:min-h-[360px] md:min-h-[380px] lg:min-h-[420px] flex items-center shadow-lg bg-gradient-to-b from-primary-500 to-primary-700">
         
         {/* Background Image Utama (Premium Dark Rustic Food Vignette) */}
         <div 
-          className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-1 sm:opacity-55 z-0"
+          className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-[0.12] pointer-events-none select-none z-0"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=80')" }}
         />
 
         {/* Pattern Overlay (Subtle Dot Grid Pattern for modern UI texture) */}
         <div 
-          className="absolute inset-0 opacity-[0.09] z-0 select-none pointer-events-none"
+          className="absolute inset-0 opacity-[0.08] z-0 select-none pointer-events-none"
           style={{
             backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
             backgroundSize: "20px 20px"
           }}
         />
 
-        {/* Overlay Dark Cozy Radial/Linear Vignette untuk Keterbacaan Teks */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/75 z-0" />
+        {/* Overlay Cozy Radial/Linear Vignette untuk Keterbacaan Teks */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary-500/10 via-primary-600/40 to-primary-700/80 z-0" />
+
+        {/* Premium Radial Background Glow */}
+        <div
+          className="absolute inset-0 opacity-[0.35] pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 10% 20%, var(--color-primary-400) 0%, transparent 60%), " +
+              "radial-gradient(circle at 90% 80%, var(--color-primary-500) 0%, transparent 50%)",
+          }}
+        />
 
         {/* Teks Konten Utama (Centered - Original Larger Typography) */}
         <div className="relative z-10 w-full max-w-2xl md:max-w-3xl pt-8 pb-16 px-6 sm:py-10 sm:px-10 md:py-14 md:px-14 lg:py-16 lg:px-16 flex flex-col justify-center items-center text-center mx-auto space-y-3 sm:space-y-4">
@@ -89,7 +99,7 @@ export default function CustomerHero() {
         ref={containerRef}
         className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-[calc(100%-3rem)] max-w-md md:max-w-xl z-30"
       >
-        <div className="relative bg-white rounded-2xl p-3 sm:p-4 shadow-2xl shadow-stone-300/80 flex items-center gap-2">
+        <div className="relative bg-white/95 backdrop-blur-md border border-stone-200/40 rounded-2xl p-3 sm:p-4 shadow-2xl flex items-center gap-2">
           <div className="relative flex-grow flex items-center">
             <Search className="absolute left-3.5 h-5 w-5 text-stone-400 flex-shrink-0 z-10" />
             
@@ -102,7 +112,7 @@ export default function CustomerHero() {
                 setIsFocused(true);
               }}
               placeholder="Cari makanan favoritmu..." 
-              className="pl-11 pr-10 h-11 sm:h-12 w-full bg-stone-50 hover:bg-stone-100/50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-800 placeholder-stone-400 focus-visible:ring-[#2d7a3e]/20 focus-visible:border-[#2d7a3e] transition-colors"
+              className="pl-11 pr-10 h-11 sm:h-12 w-full bg-stone-50 hover:bg-stone-100/50 border border-stone-200 rounded-xl text-xs sm:text-sm text-stone-800 placeholder-stone-400 focus-visible:ring-primary-500/20 focus-visible:border-primary-500 transition-colors"
             />
 
             {/* Clear Button */}
@@ -116,7 +126,7 @@ export default function CustomerHero() {
             )}
           </div>
           
-          <button className="h-11 sm:h-12 px-5 sm:px-6 bg-[#2d7a3e] hover:bg-[#1f5c2d] text-white text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center transition-all hover:shadow-md active:scale-95 whitespace-nowrap cursor-pointer">
+          <button className="h-11 sm:h-12 px-5 sm:px-6 bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center transition-all hover:shadow-md hover:shadow-green-200/30 active:scale-95 whitespace-nowrap cursor-pointer">
             Cari
           </button>
 
@@ -127,7 +137,7 @@ export default function CustomerHero() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 15 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-72 overflow-y-auto p-2 space-y-1 z-50"
+                className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-stone-200/50 rounded-2xl shadow-2xl overflow-hidden max-h-72 overflow-y-auto p-2 space-y-1 z-50"
               >
                 {suggestions.length > 0 ? (
                   suggestions.map((item) => (

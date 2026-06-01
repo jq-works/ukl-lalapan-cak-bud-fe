@@ -131,6 +131,31 @@ Konsisten di seluruh halaman customer dan admin.
 
 ---
 
+### 🪟 Glassmorphism & Texture System (Modern Elegant Style)
+
+Digunakan untuk memberikan efek modern, elegan, dan estetik premium (food-app kelas atas) seperti pada hero banner dan footer halaman utama.
+
+- **Efek Glass Ringan (Light Glass)**: `bg-white/10 border border-white/20 backdrop-blur-sm shadow-sm`
+  - *Penggunaan*: Card jam operasional, badge rating, chip kategori di atas background berwarna/gradien.
+- **Efek Glass Hover/Interactive**: `hover:bg-white/20 hover:text-white transition-all duration-200`
+- **Glow & Vignette Layer**:
+  - *Radial Glow*: lingkaran cahaya lembut di background menggunakan `--color-primary-500` dan `--color-primary-400` dengan opacity rendah (`opacity-[0.25]` hingga `opacity-[0.35]`).
+  - *Vignette Overlay*: gradien transparan untuk melembutkan gambar latar belakang: `bg-gradient-to-b from-primary-500/10 via-primary-600/40 to-primary-700/80`.
+- **Dot Grid Pattern**: Pola titik putih halus untuk memberikan tekstur UI yang modern:
+  ```tsx
+  style={{
+    backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+    backgroundSize: "20px 20px"
+  }}
+  className="opacity-[0.05] sm:opacity-[0.08]"
+  ```
+- **Teks di atas BG Warna / Glass**:
+  - Wajib menggunakan warna putih kontras tinggi (`text-white`) atau putih lembut (`text-white/90`) agar sangat terbaca. Hindari grasi/warna gelap.
+- **Elemen Highlight Menonjol**:
+  - Menyertakan potongan lingkaran makanan tradisional dengan border putih tipis (`border-white/20`) dan opacity terkontrol (`opacity-15`) yang menempel di ujung tata letak sebagai penanda identitas visual kuliner.
+
+---
+
 ## 🔤 Tipografi
 
 ### Font Family

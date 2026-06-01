@@ -9,6 +9,7 @@ export interface FoodItem {
   category: "Lalapan" | "Penyet" | "Minuman" | "Cemilan";
   image: string;
   isTerlaris?: boolean;
+  isAvailable?: boolean;
 }
 
 export const CATEGORIES = ["Semua", "Lalapan", "Penyet", "Minuman", "Cemilan"] as const;
@@ -36,6 +37,7 @@ export const FOOD_ITEMS: FoodItem[] = [
     category: "Lalapan",
     image: "https://images.unsplash.com/photo-1580442151529-343f2f5e0e27?auto=format&fit=crop&w=500&q=80",
     isTerlaris: true,
+    isAvailable: false,
   },
   {
     id: "lala-3",
@@ -78,6 +80,7 @@ export const FOOD_ITEMS: FoodItem[] = [
     desc: "Bakso sapi goreng renyah dipenyet kasar bersama sambal korek super pedas yang menggugah selera makan.",
     category: "Penyet",
     image: "https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=500&q=80",
+    isAvailable: false,
   },
   {
     id: "minum-1",
@@ -99,6 +102,7 @@ export const FOOD_ITEMS: FoodItem[] = [
     desc: "Perasan jeruk manis lokal segar disajikan dingin dengan es batu, manisnya pas dan pelepas dahaga instan.",
     category: "Minuman",
     image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80",
+    isAvailable: false,
   },
   {
     id: "minum-3",

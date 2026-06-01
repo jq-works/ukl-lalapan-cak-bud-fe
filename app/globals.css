@@ -5,6 +5,24 @@
 
 @theme {
   /* ── Brand Colors ─────────────────────────────── */
+  /* Primary — Brand Green (from style.md) */
+  --color-primary-50:  #f0faf2;
+  --color-primary-100: #d4edda;
+  --color-primary-400: #3a9e52;
+  --color-primary-500: #2d7a3e;
+  --color-primary-600: #1f5c2d;
+  --color-primary-700: #174d25;
+  --color-primary-900: #0f3018;
+  --color-primary-800: #133c1e;
+  --color-primary-950: #07170b;
+
+  /* Accent — Brand Red (from style.md) */
+  --color-accent-50:  #fff0f0;
+  --color-accent-400: #e8192c;
+  --color-accent-500: #c8102e;
+  --color-accent-600: #a50d25;
+
+  /* Legacy aliases */
   --color-brand-green:       #2d7a3e;
   --color-brand-green-dark:  #1f5c2d;
   --color-brand-green-light: #e8f5ec;
@@ -83,13 +101,25 @@ body {
   color: var(--color-stone-850);
 }
 
-/* ── Scrollbar Utilities ─────────────────────────── */
+/* ── Scrollbar Utilities & Styling ───────────────── */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Custom Global Scrollbar - Hidden but scrollable */
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+html, body, * {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 /* ── Utility Classes ─────────────────────────────── */

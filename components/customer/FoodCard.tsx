@@ -21,6 +21,7 @@ export function FoodCard({ item, viewType, isMatch = true }: FoodCardProps) {
   const [justAdded, setJustAdded] = useState(false);
 
   const dimmed = !isMatch;
+  const isAvailable = item.isAvailable !== false;
 
   const cartItem = cart.find((c) => c.id === item.id);
   const qty = cartItem?.quantity ?? 0;
@@ -49,20 +50,27 @@ export function FoodCard({ item, viewType, isMatch = true }: FoodCardProps) {
 
   if (viewType === "list") {
     return (
-      <div className="bg-white rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 flex gap-3 p-3 group">
+      <div className={`bg-white rounded-2xl overflow-hidden hover:shadow-md transition-all duration-200 flex gap-4 p-4 group ${dimmed ? "opacity-45 grayscale-[60%]" : ""}`}>
         {/* Food Image */}
-        <div className="relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-stone-100">
-          <FoodImage src={item.image} alt={item.name} className="w-full h-full" />
+        <div className="relative w-28 h-28 sm:w-36 sm:h-36 flex-shrink-0 rounded-xl overflow-hidden bg-stone-100">
+          <FoodImage src={item.image} alt={item.name} className="w-full h-full group-hover:scale-105 transition-transform duration-300" />
           {item.isTerlaris && (
-            <div className="absolute top-1 left-1 bg-[#c8102e] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-              <Flame className="w-2.5 h-2.5 fill-current" />
+            <div className="absolute top-1.5 left-1.5 bg-[#c8102e] text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm z-10">
+              <Flame className="w-2.5 h-2.5 sm:w-3 h-3 fill-current" />
               Terlaris
             </div>
           )}
           {hasDiscount && (
-            <div className="absolute bottom-1 left-1 bg-[#2d7a3e] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-              <Tag className="w-2.5 h-2.5" />
+            <div className="absolute bottom-1.5 left-1.5 bg-[#2d7a3e] text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm z-10">
+              <Tag className="w-2.5 h-2.5 sm:w-3 h-3" />
               -{discountPct}%
+            </div>
+          )}
+          {!isAvailable && (
+            <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+              <span className="text-white text-[10px] sm:text-xs font-black uppercase tracking-wider px-2.5 py-1 bg-stone-950/75 rounded-lg shadow-md">
+                Habis
+              </span>
             </div>
           )}
         </div>
@@ -70,30 +78,30 @@ export function FoodCard({ item, viewType, isMatch = true }: FoodCardProps) {
         {/* Content */}
         <div className="flex-grow min-w-0 flex flex-col justify-between py-0.5">
           <div>
-            <h3 className="text-sm font-extrabold text-stone-900 line-clamp-2 leading-snug mb-1">
+            <h3 className="text-sm sm:text-base font-extrabold text-stone-900 line-clamp-2 leading-snug mb-1 sm:mb-1.5">
               {item.name}
             </h3>
-            <p className="text-[11px] text-stone-400 line-clamp-2 leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-stone-400 line-clamp-2 sm:line-clamp-3 leading-relaxed">
               {item.desc}
             </p>
           </div>
 
-          <div className="flex items-center justify-between mt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mt-2">
             {/* Price */}
             <div className="flex flex-col">
-              <span className="text-sm font-extrabold text-[#2d7a3e]">
+              <span className="text-sm sm:text-base font-extrabold text-[#2d7a3e]">
                 {formatPrice(item.price)}
               </span>
               {hasDiscount && (
-                <span className="text-[10px] text-stone-400 line-through font-medium">
+                <span className="text-[10px] sm:text-xs text-stone-400 line-through font-medium">
                   {formatPrice(item.originalPrice!)}
                 </span>
               )}
             </div>
 
             {/* Rating */}
-            <div className="flex items-center gap-1 text-[10px] text-stone-400 font-medium">
-              <Star className="w-3 h-3 text-amber-400 fill-current" />
+            <div className="flex items-center gap-1 text-[10px] sm:text-xs text-stone-400 font-medium">
+              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 fill-current" />
               <span className="text-amber-500 font-bold">{item.rating}</span>
               <span className="text-stone-300">·</span>
               <span>Terjual {item.sold}</span>
@@ -103,10 +111,14 @@ export function FoodCard({ item, viewType, isMatch = true }: FoodCardProps) {
 
         {/* Cart Control */}
         <div className="flex-shrink-0 flex flex-col items-end justify-end">
-          {qty === 0 ? (
+          {!isAvailable ? (
+            <span className="px-3 py-1.5 rounded-full bg-stone-100 text-stone-400 text-xs font-bold border border-stone-200 select-none">
+              Habis
+            </span>
+          ) : qty === 0 ? (
             <button
               onClick={handleAdd}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm ${
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm ${
                 justAdded
                   ? "bg-emerald-500 text-white scale-105"
                   : "bg-[#2d7a3e] text-white hover:bg-[#1f5c2d] active:scale-90"
@@ -114,26 +126,26 @@ export function FoodCard({ item, viewType, isMatch = true }: FoodCardProps) {
               aria-label="Tambah ke pesanan"
             >
               {justAdded ? (
-                <ShoppingBag className="w-4 h-4" />
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </button>
           ) : (
-            <div className="flex items-center gap-1.5 bg-stone-50 rounded-full px-1.5 py-1 border border-stone-100">
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-stone-50 rounded-full p-1 border border-stone-100">
               <button
                 onClick={handleDecrease}
-                className="w-6 h-6 rounded-full border border-[#2d7a3e]/60 text-[#2d7a3e] flex items-center justify-center hover:bg-green-50 active:scale-90 transition-all cursor-pointer"
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full border border-[#2d7a3e]/60 text-[#2d7a3e] flex items-center justify-center hover:bg-green-50 active:scale-90 transition-all cursor-pointer"
                 aria-label="Kurangi"
               >
                 <Minus className="w-3 h-3" />
               </button>
-              <span className="text-sm font-bold text-stone-900 min-w-[20px] text-center">
+              <span className="text-sm sm:text-base font-bold text-stone-900 min-w-[18px] sm:min-w-[22px] text-center">
                 {qty}
               </span>
               <button
                 onClick={handleIncrease}
-                className="w-6 h-6 rounded-full bg-[#2d7a3e] text-white flex items-center justify-center hover:bg-[#1f5c2d] active:scale-90 transition-all cursor-pointer shadow-sm"
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#2d7a3e] text-white flex items-center justify-center hover:bg-[#1f5c2d] active:scale-90 transition-all cursor-pointer shadow-sm"
                 aria-label="Tambah"
               >
                 <Plus className="w-3 h-3" />
@@ -152,14 +164,21 @@ export function FoodCard({ item, viewType, isMatch = true }: FoodCardProps) {
       <div className="relative w-full aspect-[4/3] overflow-hidden bg-stone-100">
         <FoodImage src={item.image} alt={item.name} className="w-full h-full group-hover:scale-105 transition-transform duration-300" />
         {item.isTerlaris && (
-          <div className="absolute top-2 left-2 bg-[#c8102e] text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
+          <div className="absolute top-2 left-2 bg-[#c8102e] text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 z-10">
             <Flame className="w-2.5 h-2.5 fill-current" />
             Terlaris
           </div>
         )}
         {hasDiscount && (
-          <div className="absolute top-2 right-2 bg-[#2d7a3e] text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+          <div className="absolute top-2 right-2 bg-[#2d7a3e] text-white text-[9px] font-bold px-2 py-0.5 rounded-full z-10">
             -{discountPct}%
+          </div>
+        )}
+        {!isAvailable && (
+          <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+            <span className="text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 bg-stone-950/75 rounded-lg shadow-md">
+              Habis
+            </span>
           </div>
         )}
       </div>
@@ -191,7 +210,11 @@ export function FoodCard({ item, viewType, isMatch = true }: FoodCardProps) {
             )}
           </div>
 
-          {qty === 0 ? (
+          {!isAvailable ? (
+            <span className="px-2.5 py-1 rounded-full bg-stone-100 text-stone-400 text-[10px] font-bold border border-stone-200 select-none">
+              Habis
+            </span>
+          ) : qty === 0 ? (
             <button
               onClick={handleAdd}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer shadow-sm flex-shrink-0 ${

@@ -23,13 +23,13 @@ export function FloatingCartBtn() {
         >
           <button
             onClick={() => setIsCartOpen(true)}
-            className="w-full h-14 rounded-2xl bg-[#2d7a3e] text-white flex items-center justify-between px-5 shadow-xl shadow-green-300/45 hover:bg-[#1f5c2d] hover:shadow-green-300/60 active:scale-98 transition-all cursor-pointer relative animate-pulse-subtle"
+            className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary-500 to-primary-600 text-white flex items-center justify-between px-5 shadow-xl shadow-green-200/40 hover:from-primary-600 hover:to-primary-700 hover:shadow-green-300/50 border border-primary-400/20 active:scale-98 transition-all cursor-pointer relative animate-pulse-subtle"
           >
             {/* Left side: Shopping Bag and Count Badge */}
             <div className="flex items-center gap-3">
               <div className="relative">
                 <ShoppingBag className="w-5.5 h-5.5" />
-                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-[#c8102e] text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 border-2 border-[#2d7a3e]">
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-[#c8102e] text-white text-[9px] font-black rounded-full flex items-center justify-center px-1 border-2 border-primary-500">
                   {totalItems}
                 </span>
               </div>

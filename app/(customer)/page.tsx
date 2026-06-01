@@ -12,7 +12,9 @@ import { CartDrawer } from "@/components/customer/CartDrawer";
 import { BottomNav } from "@/components/customer/BottomNav";
 import { OrderHistory } from "@/components/customer/OrderHistory";
 import { AccountSection } from "@/components/customer/AccountSection";
+import CustomerFooter from "@/components/customer/Footer";
 import { PopularMarquee } from "@/components/customer/PopularMarquee";
+import RestaurantReviews from "@/components/customer/RestaurantReviews";
 import { Grid, List, UtensilsCrossed, AlertCircle, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function CustomerHomePage() {
@@ -44,23 +46,37 @@ export default function CustomerHomePage() {
     return matchesCategory && matchesSearch;
   };
 
-  const matchCount = FOOD_ITEMS.filter(isItemMatch).length;
+  // Sort food items: available items first, out-of-stock (unavailable) items at the very end
+  const sortedFoodItems = React.useMemo(() => {
+    return [...FOOD_ITEMS].sort((a, b) => {
+      const aAvail = a.isAvailable !== false ? 1 : 0;
+      const bAvail = b.isAvailable !== false ? 1 : 0;
+      return bAvail - aAvail; // 1 (available) comes before 0 (unavailable)
+    });
+  }, []);
+
+  const availableMatchCount = sortedFoodItems.filter(
+    (item) => isItemMatch(item) && item.isAvailable !== false
+  ).length;
+  const totalAvailableCount = sortedFoodItems.filter(
+    (item) => item.isAvailable !== false
+  ).length;
   const hasFilter = searchQuery !== "" || activeCategory !== "Semua";
 
-  // Always paginate ALL items so every menu is visible
-  const totalPages = Math.ceil(FOOD_ITEMS.length / ITEMS_PER_PAGE);
-  const paginatedItems = FOOD_ITEMS.slice(
+  // Always paginate ALL sorted items so every menu is visible, with out-of-stock items at the end
+  const totalPages = Math.ceil(sortedFoodItems.length / ITEMS_PER_PAGE);
+  const paginatedItems = sortedFoodItems.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col justify-start pb-24 md:pb-16 text-stone-850">
+    <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
       {/* Top Glassmorphic Navigation Bar */}
       <CustomerNavbar />
 
       {/* Main Content Area */}
-      <main className="max-w-7xl w-full mx-auto px-4 md:px-8 py-6 flex-grow">
+      <main className="max-w-7xl w-full mx-auto px-4 md:px-8 pt-6 pb-6 flex-grow">
         {activeTab === "home" && (
           <div className="fade-in space-y-6">
             {/* Cozy Hero Banner */}
@@ -75,7 +91,7 @@ export default function CustomerHomePage() {
             )}
 
             {/* ── Menu Search Bar ───────────────────────── */}
-            <div className="space-y-1">
+            <div id="menu-section" className="space-y-1">
               <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
                 Cari Menu
               </p>
@@ -154,11 +170,11 @@ export default function CustomerHomePage() {
               <span className="flex-shrink-0 text-xs font-semibold whitespace-nowrap">
                 {hasFilter ? (
                   <>
-                    <span className="text-[#2d7a3e]">{matchCount}</span>
-                    <span className="text-stone-400"> dari {FOOD_ITEMS.length} menu tersedia</span>
+                    <span className="text-[#2d7a3e]">{availableMatchCount}</span>
+                    <span className="text-stone-400"> dari {totalAvailableCount} menu tersedia</span>
                   </>
                 ) : (
-                  <span className="text-stone-400">{FOOD_ITEMS.length} menu tersedia</span>
+                  <span className="text-stone-400">{totalAvailableCount} menu tersedia</span>
                 )}
               </span>
             </div>
@@ -231,11 +247,15 @@ export default function CustomerHomePage() {
                 {/* Page info */}
                 {totalPages > 1 && (
                   <p className="text-center text-[11px] text-stone-400">
-                    Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, FOOD_ITEMS.length)} dari {FOOD_ITEMS.length} menu
+                    Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, sortedFoodItems.length)} dari {sortedFoodItems.length} menu
                   </p>
                 )}
               </div>
             </div>
+
+            {/* ── Ulasan Pelanggan ────────────────────────── */}
+            <RestaurantReviews />
+
           </div>
         )}
 
@@ -251,6 +271,9 @@ export default function CustomerHomePage() {
           </div>
         )}
       </main>
+
+      {/* Footer — only shown on home tab */}
+      {activeTab === "home" && <CustomerFooter />}
 
       {/* Floating Cart Button (Available on both screens, positioned responsively) */}
       <FloatingCartBtn />
