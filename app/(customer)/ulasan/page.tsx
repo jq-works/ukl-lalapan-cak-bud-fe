@@ -8,7 +8,8 @@ import { CartDrawer } from "@/components/customer/CartDrawer";
 import { BottomNav } from "@/components/customer/BottomNav";
 import CustomerFooter from "@/components/customer/Footer";
 import { useAuth } from "@/context/AuthContext";
-import { FiStar, FiMessageSquare, FiSend, FiCheckCircle } from "react-icons/fi";
+import { api } from "@/lib/api";
+import { FiStar, FiMessageSquare, FiSend, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 
 interface Review {
   id: string;
@@ -17,7 +18,7 @@ interface Review {
   comment: string;
   suggestions?: string;
   date: string;
-  role: string;
+  role?: string;
 }
 
 const INITIAL_REVIEWS: Review[] = [
@@ -31,13 +32,54 @@ export default function UlasanPage() {
   const { isAuthenticated, user, isLoading } = useAuth();
   const router = useRouter();
 
-  const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [averageRating, setAverageRating] = useState("4.8");
+  const [totalReviews, setTotalReviews] = useState(0);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [suggestions, setSuggestions] = useState("");
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Fetch reviews from API
+  const fetchReviews = async () => {
+    try {
+      const response = await api.get("/reviews");
+      const resData = response.data;
+      if (resData.success) {
+        const stats = resData.data?.stats;
+        if (stats) {
+          setAverageRating(Number(stats.averageRating || 0).toFixed(1));
+          setTotalReviews(stats.totalReviews || 0);
+        }
+        
+        const apiReviews = resData.data?.reviews || [];
+        const mapped: Review[] = apiReviews.map((r: any) => ({
+          id: r.id,
+          name: r.user?.name || "Pelanggan",
+          rating: Number(r.rating || 5),
+          comment: r.menuReview || "",
+          suggestions: r.suggestions || "",
+          date: new Date(r.createdAt || Date.now()).toLocaleDateString("id-ID", {
+            year: "numeric", month: "short", day: "numeric"
+          }),
+        }));
+        // If API reviews is empty, use initial fallback data so it's not empty
+        setReviews(mapped.length > 0 ? mapped : INITIAL_REVIEWS);
+      }
+    } catch (e) {
+      console.error("Gagal memuat ulasan dari API:", e);
+      setReviews(INITIAL_REVIEWS);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchReviews();
+    }
+  }, [isAuthenticated]);
 
   // Protection Check
   useEffect(() => {
@@ -57,36 +99,45 @@ export default function UlasanPage() {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!comment.trim()) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      const newReview: Review = {
-        id: `rev-${Date.now()}`,
-        name: user?.name || "Member",
+    setSubmitError(null);
+    try {
+      const response = await api.post("/reviews", {
         rating,
-        comment,
-        suggestions: suggestions.trim() ? suggestions.trim() : undefined,
-        date: new Date().toISOString().split("T")[0],
-        role: "Member"
-      };
+        menuReview: comment.trim(),
+        suggestions: suggestions.trim() || undefined
+      });
+      
+      const resData = response.data;
+      if (resData.success === false) {
+        throw new Error(resData.message || "Gagal mengirim ulasan.");
+      }
 
-      setReviews(prev => [newReview, ...prev]);
-      setIsSubmitting(false);
       setIsSuccess(true);
       setComment("");
       setSuggestions("");
       setRating(5);
       
+      await fetchReviews();
+      
       // Reset success message
-      setTimeout(() => setIsSuccess(false), 4000);
-    }, 1200);
+      setTimeout(() => setIsSuccess(false), 4500);
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || err.message || "Gagal mengirim ulasan.";
+      console.error("Gagal mengirim ulasan ke server:", errMsg);
+      setSubmitError(errMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Stats
-  const avgRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
+  const avgRating = totalReviews > 0 ? averageRating : (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
+  const reviewsCount = totalReviews > 0 ? totalReviews : reviews.length;
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
@@ -117,7 +168,7 @@ export default function UlasanPage() {
                         <FiStar key={idx} className="w-4 h-4 fill-current" />
                       ))}
                     </div>
-                    <p className="text-[10px] text-stone-400 font-bold mt-1 uppercase">Berdasarkan {reviews.length} Ulasan</p>
+                    <p className="text-[10px] text-stone-400 font-bold mt-1 uppercase">Berdasarkan {reviewsCount} Ulasan</p>
                   </div>
                 </div>
               </div>
@@ -192,6 +243,13 @@ export default function UlasanPage() {
                         className="w-full p-3 border border-stone-200 rounded-xl text-xs focus:ring-1 focus:ring-primary-500 focus:outline-none resize-none"
                       />
                     </div>
+
+                    {submitError && (
+                      <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-[11px] flex items-center gap-2">
+                        <FiAlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span>{submitError}</span>
+                      </div>
+                    )}
 
                     <button
                       type="submit"

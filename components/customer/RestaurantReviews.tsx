@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { FaStar, FaRegStar, FaStarHalfAlt, FaQuoteLeft, FaThumbsUp } from "react-icons/fa";
-import { MdVerified } from "react-icons/md";
+import { api } from "@/lib/api";
 
 /* ─── Types ───────────────────────────────────────────────── */
 interface Review {
@@ -126,6 +126,89 @@ const AVG = (
 export default function RestaurantReviews() {
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [isPaused, setIsPaused] = useState(false);
+  const [reviewsList, setReviewsList] = useState<Review[]>([]);
+  const [avgRating, setAvgRating] = useState("4.8");
+  const [totalCount, setTotalCount] = useState(1150);
+  const [distribution, setDistribution] = useState([
+    { stars: 5, count: 847 },
+    { stars: 4, count: 213 },
+    { stars: 3, count: 64 },
+    { stars: 2, count: 18 },
+    { stars: 1, count: 7 },
+  ]);
+
+  const fetchReviews = async () => {
+    try {
+      const res = await api.get("/reviews");
+      const resData = res.data;
+      if (resData.success) {
+        const apiReviews = resData.data?.reviews || [];
+        
+        if (apiReviews.length > 0) {
+          const colors = ["bg-primary-500", "bg-accent-500", "bg-blue-500", "bg-amber-500", "bg-emerald-600", "bg-purple-500"];
+          const mapped: Review[] = apiReviews.map((r: any) => {
+            const index = Math.abs(r.user?.name?.charCodeAt(0) || 0) % colors.length;
+            return {
+              id: r.id,
+              name: r.user?.name || "Pelanggan",
+              avatar: (r.user?.name || "P").slice(0, 2).toUpperCase(),
+              avatarColor: colors[index],
+              rating: Number(r.rating || 5),
+              date: new Date(r.createdAt || Date.now()).toLocaleDateString("id-ID", {
+                day: "numeric", month: "short", year: "numeric"
+              }),
+              text: r.menuReview || "",
+              orderItem: r.suggestions ? "Saran: " + r.suggestions : "Ulasan Kuliner",
+              likes: Math.floor(Math.random() * 12) + 2,
+              isVerified: true
+            };
+          });
+          
+          setReviewsList(mapped);
+          
+          // Calculate stats
+          const total = apiReviews.length;
+          const sum = apiReviews.reduce((acc: number, val: any) => acc + Number(val.rating || 5), 0);
+          const avg = (sum / total).toFixed(1);
+          setAvgRating(avg);
+          setTotalCount(total);
+          
+          const starCounts = [0, 0, 0, 0, 0]; // 1, 2, 3, 4, 5 stars
+          apiReviews.forEach((r: any) => {
+            const rating = Math.min(5, Math.max(1, Math.round(Number(r.rating || 5))));
+            starCounts[rating - 1]++;
+          });
+          
+          setDistribution([
+            { stars: 5, count: starCounts[4] },
+            { stars: 4, count: starCounts[3] },
+            { stars: 3, count: starCounts[2] },
+            { stars: 2, count: starCounts[1] },
+            { stars: 1, count: starCounts[0] },
+          ]);
+        } else {
+          // Fallback to dummy data
+          setReviewsList(REVIEWS);
+          setAvgRating("4.8");
+          setTotalCount(1150);
+          setDistribution([
+            { stars: 5, count: 847 },
+            { stars: 4, count: 213 },
+            { stars: 3, count: 64 },
+            { stars: 2, count: 18 },
+            { stars: 1, count: 7 },
+          ]);
+        }
+      }
+    } catch (e) {
+      console.error("Gagal mengambil ulasan di RestaurantReviews:", e);
+      setReviewsList(REVIEWS);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
 
   // ── Drag-to-scroll state ──────────────────────────────────────────────
   const trackRef = useRef<HTMLDivElement>(null);
@@ -189,7 +272,11 @@ export default function RestaurantReviews() {
     });
   };
 
-  const duplicatedReviews = [...REVIEWS, ...REVIEWS, ...REVIEWS];
+  const duplicatedReviews = reviewsList.length > 0
+    ? (reviewsList.length < 3
+        ? [...reviewsList, ...reviewsList, ...reviewsList, ...reviewsList]
+        : [...reviewsList, ...reviewsList, ...reviewsList])
+    : [];
 
   return (
     <section id="ulasan-section" className="space-y-6">
@@ -207,13 +294,13 @@ export default function RestaurantReviews() {
 
         {/* Big score */}
         <div className="flex flex-col items-center gap-1 flex-shrink-0">
-          <span className="text-5xl font-extrabold text-stone-900 leading-none">{AVG}</span>
+          <span className="text-5xl font-extrabold text-stone-900 leading-none">{avgRating}</span>
           <div className="flex items-center gap-0.5">
             {[1,2,3,4,5].map((s) => (
-              <FaStar key={s} className={s <= Math.round(Number(AVG)) ? "text-amber-400" : "text-stone-200"} size={14} />
+              <FaStar key={s} className={s <= Math.round(Number(avgRating)) ? "text-amber-400" : "text-stone-200"} size={14} />
             ))}
           </div>
-          <span className="text-[11px] text-stone-400">{TOTAL.toLocaleString("id-ID")} ulasan</span>
+          <span className="text-[11px] text-stone-400">{totalCount.toLocaleString("id-ID")} ulasan</span>
         </div>
 
         {/* Divider */}
@@ -222,8 +309,8 @@ export default function RestaurantReviews() {
 
         {/* Distribution bars */}
         <div className="flex-grow w-full space-y-1.5">
-          {DIST.map(({ stars, count }) => {
-            const pct = Math.round((count / TOTAL) * 100);
+          {distribution.map(({ stars, count }) => {
+            const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
             return (
               <div key={stars} className="flex items-center gap-2">
                 <span className="text-[11px] font-semibold text-stone-500 w-4 text-right">{stars}</span>
@@ -287,9 +374,6 @@ export default function RestaurantReviews() {
                         <div>
                           <div className="flex items-center gap-1.5">
                             <p className="text-[13px] font-bold text-stone-800">{review.name}</p>
-                            {review.isVerified && (
-                              <MdVerified className="text-primary-500" size={13} title="Pembeli terverifikasi" />
-                            )}
                           </div>
                           <p className="text-[11px] text-stone-400">{review.date}</p>
                         </div>

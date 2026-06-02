@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import CustomerNavbar from "@/components/customer/navbar";
 import CustomerHero from "@/components/customer/hero";
 import { useCart } from "@/context/CartContext";
-import { FOOD_ITEMS, CATEGORIES } from "@/lib/data";
+import { FoodItem } from "@/lib/data";
 import { FoodCard } from "@/components/customer/FoodCard";
 import { CategoryChip } from "@/components/ui/CategoryChip";
 import { FloatingCartBtn } from "@/components/customer/FloatingCartBtn";
@@ -21,6 +21,9 @@ export default function CustomerHomePage() {
     setSearchQuery,
     activeCategory,
     setActiveCategory,
+    foodItems,
+    categories,
+    isLoadingMenu,
   } = useCart();
 
   const [viewType, setViewType] = useState<"grid" | "list">("list");
@@ -33,7 +36,7 @@ export default function CustomerHomePage() {
   }, [searchQuery, activeCategory]);
 
   // Compute which items match the active filter (for dimming)
-  const isItemMatch = (item: (typeof FOOD_ITEMS)[0]) => {
+  const isItemMatch = (item: FoodItem) => {
     const matchesCategory =
       activeCategory === "Semua" || item.category === activeCategory;
     const matchesSearch =
@@ -45,12 +48,12 @@ export default function CustomerHomePage() {
 
   // Sort food items: available items first, out-of-stock (unavailable) items at the very end
   const sortedFoodItems = React.useMemo(() => {
-    return [...FOOD_ITEMS].sort((a, b) => {
+    return [...foodItems].sort((a, b) => {
       const aAvail = a.isAvailable !== false ? 1 : 0;
       const bAvail = b.isAvailable !== false ? 1 : 0;
       return bAvail - aAvail; // 1 (available) comes before 0 (unavailable)
     });
-  }, []);
+  }, [foodItems]);
 
   const availableMatchCount = sortedFoodItems.filter(
     (item) => isItemMatch(item) && item.isAvailable !== false
@@ -66,6 +69,17 @@ export default function CustomerHomePage() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  if (isLoadingMenu) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[#2d7a3e] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-semibold text-stone-500">Memuat hidangan lezat...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
@@ -121,7 +135,7 @@ export default function CustomerHomePage() {
         {/* ── Filter Bar: categories + view toggle + count — satu baris ── */}
         <div className="flex items-center gap-2 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto scrollbar-hide pb-1">
           {/* Category Chips */}
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <CategoryChip
               key={cat}
               label={cat}

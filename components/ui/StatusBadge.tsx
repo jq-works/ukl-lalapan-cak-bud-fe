@@ -2,13 +2,11 @@
 
 import React from "react";
 
-export type OrderStatus = "PENDING" | "PAID" | "PROCESSING" | "READY" | "COMPLETED" | "CANCELLED";
+export type OrderStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "CANCELLED";
 
 export const statusConfig = {
   PENDING: { label: "Menunggu", bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-400" },
-  PAID: { label: "Lunas", bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
   PROCESSING: { label: "Diproses", bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },
-  READY: { label: "Siap Ambil", bg: "bg-primary-50", text: "text-primary-700", dot: "bg-primary-500" },
   COMPLETED: { label: "Selesai", bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" },
   CANCELLED: { label: "Dibatalkan", bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400" },
 };

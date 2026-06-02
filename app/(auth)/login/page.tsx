@@ -111,7 +111,7 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nama@email.com"
+                    placeholder="nama@mail.com"
                     className="w-full h-11 bg-stone-50/50 border border-stone-250 rounded-xl pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500 focus:bg-white transition-all duration-200"
                     required
                   />
@@ -174,24 +174,6 @@ export default function LoginPage() {
               </Link>
             </div>
           </div>
-
-          {/* Demo Accounts Helper */}
-          <div className="p-4 rounded-2xl bg-white border border-stone-150 text-[11px] text-stone-500 space-y-1">
-            <p className="font-bold text-stone-700">Akun Uji Coba Offline:</p>
-            <div className="grid grid-cols-2 gap-2 mt-1">
-              <div>
-                <p className="text-stone-400 font-semibold uppercase text-[9px]">👨‍💼 Admin:</p>
-                <p className="font-mono">fahry@gmail.com</p>
-                <p className="font-mono">Pass: 12345678</p>
-              </div>
-              <div>
-                <p className="text-stone-400 font-semibold uppercase text-[9px]">👤 Customer:</p>
-                <p className="font-mono">dzaky@gmail.com</p>
-                <p className="font-mono">Pass: 12345678</p>
-              </div>
-            </div>
-          </div>
-
         </div>
       </main>
 

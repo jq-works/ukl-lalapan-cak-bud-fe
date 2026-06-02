@@ -87,7 +87,7 @@ export default function RegisterPage() {
               Lalapan <span className="text-primary-500">Cak Bud</span>
             </h1>
             <p className="text-stone-500 text-xs mt-2">
-              Mulai nikmati kelezatan lalapan dengan akun member Anda.
+              Mulai nikmati kelezatan lalapan dengan mendaftarkan akun Anda.
             </p>
           </div>
 
@@ -222,7 +222,7 @@ export default function RegisterPage() {
                       <span>Mendaftarkan...</span>
                     </div>
                   ) : (
-                    "Buat Akun Member"
+                    "Buat Akun Baru"
                   )}
                 </button>
               </form>

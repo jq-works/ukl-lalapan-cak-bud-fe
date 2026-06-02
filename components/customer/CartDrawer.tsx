@@ -25,7 +25,7 @@ export function CartDrawer() {
   }, []);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const serviceFee = 4000;
+  const serviceFee = 2000;
   const total = subtotal + serviceFee;
 
   const handleProceedToCheckout = () => {
@@ -148,8 +148,8 @@ export function CartDrawer() {
                     <span>Rp {subtotal.toLocaleString("id-ID")}</span>
                   </div>
                   <div className="flex justify-between text-stone-500">
-                    <span>Biaya Layanan & Penyiapan</span>
-                    <span>Rp {serviceFee.toLocaleString("id-ID")}</span>
+                    <span>Biaya Admin & Layanan</span>
+                    <span className="text-stone-700 font-semibold">Rp {serviceFee.toLocaleString("id-ID")}</span>
                   </div>
                   <div className="flex justify-between text-xs font-bold text-stone-900 pt-1">
                     <span>Total Pembayaran</span>

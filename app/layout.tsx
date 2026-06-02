@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { AlertProvider } from "@/context/AlertContext";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -23,9 +24,11 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className={`${jakarta.className} min-h-full flex flex-col`}>
         <AuthProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <AlertProvider>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </AlertProvider>
         </AuthProvider>
       </body>
     </html>

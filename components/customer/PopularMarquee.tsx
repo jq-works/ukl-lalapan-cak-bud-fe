@@ -2,12 +2,11 @@
 
 import React, { useRef, useState, useCallback } from "react";
 import { Flame, Star, Plus, Check } from "lucide-react";
-import { FOOD_ITEMS } from "@/lib/data";
 import { FoodImage } from "@/components/ui/FoodImage";
 import { useCart } from "@/context/CartContext";
 
 export function PopularMarquee() {
-  const { addToCart } = useCart();
+  const { addToCart, foodItems } = useCart();
   const [addedItemId, setAddedItemId] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -72,7 +71,7 @@ export function PopularMarquee() {
     setTimeout(() => setAddedItemId(null), 1500);
   };
 
-  const popularItems = FOOD_ITEMS.filter((item) => item.isTerlaris);
+  const popularItems = foodItems.filter((item) => (item.isTerlaris || item.rating >= 4.8) && item.isAvailable !== false);
   if (popularItems.length === 0) return null;
 
   // Triple the items so the loop is seamless even when scrolling

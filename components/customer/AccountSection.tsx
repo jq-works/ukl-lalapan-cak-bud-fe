@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, MapPin, Award, ShieldAlert, LogOut, ChevronRight, Gift, Lock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useAlert } from "@/context/AlertContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,8 +18,127 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function AccountSection() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, updateProfile, error, setError } = useAuth();
+  const { showAlert } = useAlert();
   const router = useRouter();
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [formName, setFormName] = useState("");
+  const [formPhone, setFormPhone] = useState("");
+  const [formEmail, setFormEmail] = useState("");
+  const [editConfirmPassword, setEditConfirmPassword] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false);
+  const [pwdOldPassword, setPwdOldPassword] = useState("");
+  const [pwdNewPassword, setPwdNewPassword] = useState("");
+  const [pwdConfirmPassword, setPwdConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFormName(user.name);
+      setFormPhone(user.phone || "");
+      setFormEmail(user.email || "");
+    }
+  }, [user]);
+
+  // Reset errors when edit profile dialog open state changes
+  useEffect(() => {
+    if (isEditOpen) {
+      setError(null);
+      setEditError(null);
+      setEditConfirmPassword("");
+    }
+  }, [isEditOpen, setError]);
+
+  // Reset errors when change password dialog open state changes
+  useEffect(() => {
+    if (isPasswordOpen) {
+      setError(null);
+      setPasswordError(null);
+      setPwdOldPassword("");
+      setPwdNewPassword("");
+      setPwdConfirmPassword("");
+    }
+  }, [isPasswordOpen, setError]);
+
+  const handleUpdateProfile = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!formName.trim()) {
+      setEditError("Nama lengkap tidak boleh kosong.");
+      return;
+    }
+    if (!formEmail.trim()) {
+      setEditError("Alamat email tidak boleh kosong.");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formEmail.trim())) {
+      setEditError("Format email tidak valid.");
+      return;
+    }
+    if (!editConfirmPassword) {
+      setEditError("Kata sandi saat ini wajib diisi untuk verifikasi.");
+      return;
+    }
+
+    setIsUpdating(true);
+    setEditError(null);
+    setError(null);
+    
+    const success = await updateProfile(
+      formName.trim(), 
+      formPhone.trim(), 
+      formEmail.trim(), 
+      editConfirmPassword
+    );
+    if (success) {
+      setIsEditOpen(false);
+      showAlert("Profil Anda berhasil diperbarui.", "Profil Diperbarui");
+    }
+    setIsUpdating(false);
+  };
+
+  const handleResetPassword = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (!pwdOldPassword) {
+      setPasswordError("Kata sandi saat ini wajib diisi.");
+      return;
+    }
+    if (!pwdNewPassword) {
+      setPasswordError("Kata sandi baru tidak boleh kosong.");
+      return;
+    }
+    if (pwdNewPassword.length < 6) {
+      setPasswordError("Kata sandi baru minimal 6 karakter.");
+      return;
+    }
+    if (pwdNewPassword !== pwdConfirmPassword) {
+      setPasswordError("Kata sandi baru tidak cocok dengan konfirmasi.");
+      return;
+    }
+
+    setIsUpdating(true);
+    setPasswordError(null);
+    setError(null);
+    
+    const success = await updateProfile(
+      user.name, 
+      user.phone || "", 
+      user.email, 
+      pwdOldPassword, 
+      pwdNewPassword
+    );
+    if (success) {
+      setIsPasswordOpen(false);
+      showAlert("Kata sandi Anda berhasil diperbarui.", "Kata Sandi Diperbarui");
+    }
+    setIsUpdating(false);
+  };
 
   const handleLogout = () => {
     logout();
@@ -34,9 +154,9 @@ export function AccountSection() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-extrabold text-stone-900">Gabung Sebagai Member!</h2>
+          <h2 className="text-xl font-extrabold text-stone-900">Gabung Bersama Kami!</h2>
           <p className="text-stone-500 text-xs leading-relaxed max-w-sm mx-auto">
-            Nikmati kemudahan melacak pesanan aktif, kumpulkan Cak Bud Poin untuk promo gratis, dan lakukan checkout instan tanpa mengisi ulang data.
+            Nikmati kemudahan melacak pesanan aktif secara real-time dan lakukan checkout instan tanpa mengisi ulang data.
           </p>
         </div>
 
@@ -56,7 +176,7 @@ export function AccountSection() {
               onClick={() => router.push("/register")}
               className="text-primary-500 font-bold hover:underline cursor-pointer"
             >
-              Daftar Member Baru
+              Daftar Akun Baru
             </button>
           </p>
         </div>
@@ -64,14 +184,14 @@ export function AccountSection() {
         {/* Feature Highlights Grid */}
         <div className="grid grid-cols-2 gap-3 pt-8 border-t border-stone-150">
           <div className="p-3 bg-white border border-stone-100 rounded-xl text-left space-y-1">
-            <Gift className="w-4 h-4 text-amber-500" />
-            <p className="text-xs font-bold text-stone-800">Cak Bud Poin</p>
-            <p className="text-[10px] text-stone-400 font-medium">Tukarkan dengan produk gratis.</p>
+            <Award className="w-4 h-4 text-amber-500" />
+            <p className="text-xs font-bold text-stone-800">Lacak Pesanan</p>
+            <p className="text-[10px] text-stone-400 font-medium">Pantau pesanan Anda secara real-time.</p>
           </div>
           <div className="p-3 bg-white border border-stone-100 rounded-xl text-left space-y-1">
-            <MapPin className="w-4 h-4 text-blue-500" />
-            <p className="text-xs font-bold text-stone-800">Simpan Alamat</p>
-            <p className="text-[10px] text-stone-400 font-medium">Pengiriman pesanan jadi lebih cepat.</p>
+            <User className="w-4 h-4 text-blue-500" />
+            <p className="text-xs font-bold text-stone-800">Checkout Instan</p>
+            <p className="text-[10px] text-stone-400 font-medium">Pesan lebih cepat tanpa input ulang.</p>
           </div>
         </div>
       </div>
@@ -92,54 +212,204 @@ export function AccountSection() {
           <p className="text-xs text-stone-400 font-medium leading-none">
             {user.email} {user.phone && `· ${user.phone}`}
           </p>
-          <div className="inline-flex items-center gap-1 bg-primary-500/10 text-primary-700 px-2.5 py-0.5 rounded-full text-[10px] font-bold mt-1.5 border border-primary-500/10">
-            <Award className="w-3 h-3 fill-current text-primary-600" />
-            <span>Member</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Points & Loyalty Metrics */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Points Card */}
-        <div className="bg-white border border-stone-150 rounded-2xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center flex-shrink-0 border border-amber-100">
-            <Gift className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">Cak Bud Poin</p>
-            <p className="text-sm font-extrabold text-stone-800">350 Poin</p>
-          </div>
-        </div>
-        
-        {/* Address Counter */}
-        <div className="bg-white border border-stone-150 rounded-2xl p-4 shadow-sm flex items-center gap-3 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0 border border-blue-100">
-            <MapPin className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] text-stone-450 font-bold uppercase tracking-wider">Alamat Saya</p>
-            <p className="text-sm font-extrabold text-stone-800">2 Lokasi</p>
-          </div>
         </div>
       </div>
 
       {/* Settings Options List */}
       <div className="bg-white border border-stone-150 rounded-2xl overflow-hidden shadow-sm">
-        {/* Option 1: Saved Addresses */}
-        <div 
-          onClick={() => alert("Fitur Alamat Tersimpan akan segera hadir.")}
-          className="flex items-center justify-between p-4 border-b border-stone-100 hover:bg-stone-50 cursor-pointer transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <MapPin className="w-4 h-4 text-stone-400" />
-            <div>
-              <p className="text-xs font-bold text-stone-800">Alamat Tersimpan</p>
-              <p className="text-[11px] text-stone-400 font-medium">Atur lokasi kos, kantor, dan rumah</p>
+        {/* Option: Edit Profil */}        {/* Option 1: Edit Profil */}
+        <AlertDialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <AlertDialogTrigger asChild>
+            <div className="flex items-center justify-between p-4 border-b border-stone-100 hover:bg-stone-50 cursor-pointer transition-colors">
+              <div className="flex items-center gap-3">
+                <User className="w-4 h-4 text-stone-400" />
+                <div>
+                  <p className="text-xs font-bold text-stone-800">Edit Profil</p>
+                  <p className="text-[11px] text-stone-400 font-medium">Ubah nama lengkap, nomor telepon, dan email Anda</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-stone-400" />
             </div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-stone-400" />
-        </div>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Ubah Profil Saya</AlertDialogTitle>
+              <AlertDialogDescription className="text-xs">
+                Perbarui data diri Anda. Masukkan kata sandi saat ini untuk memverifikasi perubahan.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            {/* Form Fields */}
+            <div className="space-y-3 px-6 pb-6 pt-2">
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">Nama Lengkap</label>
+                <input 
+                  type="text"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="Nama Lengkap"
+                  className="w-full h-11 px-4 border border-stone-200 rounded-xl text-xs font-semibold text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">Nomor Telepon</label>
+                <input 
+                  type="text"
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(e.target.value)}
+                  placeholder="Nomor Telepon (misal: 08123456789)"
+                  className="w-full h-11 px-4 border border-stone-200 rounded-xl text-xs font-semibold text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition-all duration-200"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">Alamat Email</label>
+                <input 
+                  type="email"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  placeholder="nama@email.com"
+                  className="w-full h-11 px-4 border border-stone-200 rounded-xl text-xs font-semibold text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition-all duration-200"
+                />
+              </div>
+
+              <div className="h-px bg-stone-100 my-4" />
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-red-500 uppercase tracking-wider">Kata Sandi Saat Ini *</label>
+                <input 
+                  type="password"
+                  value={editConfirmPassword}
+                  onChange={(e) => setEditConfirmPassword(e.target.value)}
+                  placeholder="Masukkan kata sandi saat ini"
+                  className="w-full h-11 px-4 border-2 border-primary-500/30 rounded-xl text-xs font-semibold text-stone-800 placeholder:text-stone-450 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition-all duration-200"
+                />
+              </div>
+
+              {(editError || error) && (
+                <p className="text-[10px] font-semibold text-red-600 mt-2">{editError || error}</p>
+              )}
+            </div>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                if (user) {
+                  setFormName(user.name);
+                  setFormPhone(user.phone || "");
+                  setFormEmail(user.email || "");
+                }
+                setEditError(null);
+                setEditConfirmPassword("");
+              }}>
+                Batal
+              </AlertDialogCancel>
+              <button 
+                onClick={handleUpdateProfile}
+                disabled={isUpdating}
+                className="inline-flex h-9 items-center justify-center rounded-xl bg-primary-500 px-5 text-xs font-bold text-white shadow-md shadow-green-200/50 transition-all duration-200 hover:bg-primary-600 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none active:scale-95 cursor-pointer"
+              >
+                {isUpdating ? (
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Menyimpan...</span>
+                  </div>
+                ) : (
+                  <span>Simpan Perubahan</span>
+                )}
+              </button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Option 2: Ubah Kata Sandi */}
+        <AlertDialog open={isPasswordOpen} onOpenChange={setIsPasswordOpen}>
+          <AlertDialogTrigger asChild>
+            <div className="flex items-center justify-between p-4 border-b border-stone-100 hover:bg-stone-50 cursor-pointer transition-colors">
+              <div className="flex items-center gap-3">
+                <Lock className="w-4 h-4 text-stone-400" />
+                <div>
+                  <p className="text-xs font-bold text-stone-800">Ubah Kata Sandi</p>
+                  <p className="text-[11px] text-stone-400 font-medium">Perbarui kata sandi akun Anda secara berkala</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-stone-400" />
+            </div>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Ubah Kata Sandi</AlertDialogTitle>
+              <AlertDialogDescription className="text-xs">
+                Ubah kata sandi akun Anda secara berkala untuk menjaga keamanan data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            
+            {/* Form Fields */}
+            <div className="space-y-3 px-6 pb-6 pt-2">
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">Kata Sandi Saat Ini *</label>
+                <input 
+                  type="password"
+                  value={pwdOldPassword}
+                  onChange={(e) => setPwdOldPassword(e.target.value)}
+                  placeholder="Masukkan kata sandi lama"
+                  className="w-full h-11 px-4 border border-stone-200 rounded-xl text-xs font-semibold text-stone-850 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition-all duration-200"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">Kata Sandi Baru *</label>
+                <input 
+                  type="password"
+                  value={pwdNewPassword}
+                  onChange={(e) => setPwdNewPassword(e.target.value)}
+                  placeholder="Minimal 6 karakter"
+                  className="w-full h-11 px-4 border border-stone-200 rounded-xl text-xs font-semibold text-stone-850 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition-all duration-200"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-wider">Konfirmasi Kata Sandi Baru *</label>
+                <input 
+                  type="password"
+                  value={pwdConfirmPassword}
+                  onChange={(e) => setPwdConfirmPassword(e.target.value)}
+                  placeholder="Ulangi kata sandi baru"
+                  className="w-full h-11 px-4 border border-stone-200 rounded-xl text-xs font-semibold text-stone-850 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent bg-white transition-all duration-200"
+                />
+              </div>
+
+              {(passwordError || error) && (
+                <p className="text-[10px] font-semibold text-red-600 mt-2">{passwordError || error}</p>
+              )}
+            </div>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => {
+                setPwdOldPassword("");
+                setPwdNewPassword("");
+                setPwdConfirmPassword("");
+                setPasswordError(null);
+              }}>
+                Batal
+              </AlertDialogCancel>
+              <button 
+                onClick={handleResetPassword}
+                disabled={isUpdating}
+                className="inline-flex h-9 items-center justify-center rounded-xl bg-primary-500 px-5 text-xs font-bold text-white shadow-md shadow-green-200/50 transition-all duration-200 hover:bg-primary-600 disabled:bg-stone-200 disabled:text-stone-400 disabled:shadow-none active:scale-95 cursor-pointer"
+              >
+                {isUpdating ? (
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Menyimpan...</span>
+                  </div>
+                ) : (
+                  <span>Ubah Kata Sandi</span>
+                )}
+              </button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+
 
         {/* Option 2: Help Center */}
         <div 
@@ -168,7 +438,7 @@ export function AccountSection() {
             <AlertDialogHeader>
               <AlertDialogTitle>Konfirmasi Keluar</AlertDialogTitle>
               <AlertDialogDescription>
-                Apakah Anda yakin ingin keluar dari akun member Lalapan Cak Bud?
+                Apakah Anda yakin ingin keluar dari akun Lalapan Cak Bud?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

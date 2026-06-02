@@ -17,7 +17,7 @@ export default function AccountPage() {
         <div className="fade-in space-y-6">
           <div>
             <h1 className="text-2xl font-extrabold text-stone-900 tracking-tight">Akun Saya</h1>
-            <p className="text-stone-500 text-xs mt-1">Kelola data profil member, kumpulkan Cak Bud Poin, dan atur alamat pengiriman Anda.</p>
+            <p className="text-stone-500 text-xs mt-1">Kelola data profil dan keamanan akun Lalapan Cak Bud Anda.</p>
           </div>
 
           <div className="bg-white border border-stone-150 rounded-2xl p-6 shadow-sm">

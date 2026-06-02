@@ -40,7 +40,7 @@ export default function CheckoutPage() {
   }, [isAuthenticated]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const serviceFee = 4000;
+  const serviceFee = 0;
   const total = subtotal + serviceFee;
 
   const handleCheckoutClick = () => {
@@ -65,7 +65,7 @@ export default function CheckoutPage() {
     setShowPaymentSimulation(true);
   };
 
-  const executeCheckout = async (initialStatus: "PENDING" | "PAID") => {
+  const executeCheckout = async (initialStatus: "PENDING" | "PROCESSING") => {
     setIsSubmitting(true);
     try {
       let success = false;
@@ -231,7 +231,7 @@ export default function CheckoutPage() {
                           : "text-stone-500 hover:text-stone-850"
                       }`}
                     >
-                      Pesan sebagai Member
+                      Pesan dengan Akun
                     </button>
                   </div>
                 )}
@@ -249,15 +249,12 @@ export default function CheckoutPage() {
                         <p className="text-[11px] text-stone-500 mt-0.5">{user?.email} · {user?.phone || "-"}</p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold text-primary-750 bg-primary-100 px-2.5 py-0.5 rounded-full border border-primary-200">
-                      MEMBER
-                    </span>
                   </div>
                 ) : checkoutMode === "member" ? (
                   /* Redirect to Login Card */
                   <div className="p-5 border border-stone-200 rounded-2xl text-center space-y-3">
                     <p className="text-xs text-stone-500 leading-relaxed max-w-sm mx-auto">
-                      Gunakan Akun Member Anda untuk melacak status pesanan secara real-time dan klaim Cak Bud Reward Points.
+                      Gunakan Akun Anda untuk melacak status pesanan secara real-time.
                     </p>
                     <button
                       type="button"
@@ -409,7 +406,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between text-stone-500">
                     <span>Biaya Layanan & Penyiapan</span>
-                    <span className="font-medium text-stone-800">Rp {serviceFee.toLocaleString("id-ID")}</span>
+                    <span className="text-[#2d7a3e] font-bold">Gratis</span>
                   </div>
                   <div className="flex justify-between text-sm font-black text-stone-900 border-t border-stone-100 pt-2.5">
                     <span>Total Pembayaran</span>
@@ -552,7 +549,7 @@ export default function CheckoutPage() {
             <div className="space-y-2 pt-2">
               <button
                 disabled={isSubmitting}
-                onClick={() => executeCheckout(paymentMethod === "cash" ? "PENDING" : "PAID")}
+                onClick={() => executeCheckout(paymentMethod === "cash" ? "PENDING" : "PROCESSING")}
                 className="w-full h-11 bg-[#2d7a3e] hover:bg-[#1f5c2d] disabled:bg-stone-300 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95 transition-all"
               >
                 {isSubmitting ? (
