@@ -1,10 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
 import CustomerNavbar from "@/components/customer/navbar";
-import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
 import { BottomNav } from "@/components/customer/BottomNav";
 import CustomerFooter from "@/components/customer/Footer";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
@@ -13,90 +10,37 @@ import { CheckoutPenyajian } from "@/components/customer/CheckoutPenyajian";
 import { CheckoutInfoForm } from "@/components/customer/CheckoutInfoForm";
 import { CheckoutNotesAndPayment, CheckoutSummaryCard } from "@/components/customer/CheckoutSummaryCard";
 import { CheckoutPaymentModal } from "@/components/customer/CheckoutPaymentModal";
+import { useCheckoutForm } from "./hooks/useCheckoutForm";
 
 export default function CheckoutPage() {
-  const { cart, checkout } = useCart();
-  const { isAuthenticated, user, isLoading } = useAuth();
-  const router = useRouter();
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Checkout forms states
-  const [checkoutMode, setCheckoutMode] = useState<"member" | "guest">("member");
-  const [guestName, setGuestName] = useState("");
-  const [guestPhone, setGuestPhone] = useState("");
-  const [orderNote, setOrderNote] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
-
-  // Dine In vs Take Away & Payment Simulation states
-  const [orderType, setOrderType] = useState<"dine_in" | "take_away">("take_away");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "qris" | "transfer">("qris");
-  const [showPaymentSimulation, setShowPaymentSimulation] = useState(false);
-
-  // Set default mode on authentication state change
-  useEffect(() => {
-    if (isAuthenticated) {
-      setCheckoutMode("member");
-    } else {
-      setCheckoutMode("guest");
-    }
-  }, [isAuthenticated]);
-
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const serviceFee = 2000;
-  const total = subtotal + serviceFee;
-
-  const handleCheckoutClick = () => {
-    setFormError(null);
-
-    // If guest, validate fields
-    if (!isAuthenticated && checkoutMode === "guest") {
-      if (!guestName.trim()) {
-        setFormError("Nama lengkap pemesan wajib diisi.");
-        return;
-      }
-      if (!guestPhone.trim()) {
-        setFormError("Nomor WhatsApp wajib diisi.");
-        return;
-      }
-      if (!/^[0-9+]{8,15}$/.test(guestPhone.replace(/\s+/g, ""))) {
-        setFormError("Nomor WhatsApp tidak valid. Gunakan angka.");
-        return;
-      }
-    }
-
-    setShowPaymentSimulation(true);
-  };
-
-  const executeCheckout = async (initialStatus: "PENDING" | "PROCESSING") => {
-    setIsSubmitting(true);
-    try {
-      let success = false;
-      const typeLabel = orderType === "dine_in" ? "DINE IN" : "TAKE AWAY";
-      const activePhone = isAuthenticated ? (user?.phone || "") : guestPhone;
-      const phoneTag = activePhone ? `[HP: ${activePhone}] ` : "";
-      const finalNote = `[${typeLabel}] ${phoneTag}${orderNote}`.trim();
-      const apiOrderType = orderType === "dine_in" ? "DINE_IN" : "TAKE_AWAY";
-
-      if (isAuthenticated) {
-        success = await checkout(undefined, finalNote, initialStatus, apiOrderType, paymentMethod);
-      } else {
-        success = await checkout({ name: guestName, phone: guestPhone }, finalNote, initialStatus, apiOrderType, paymentMethod);
-      }
-      
-      if (success) {
-        setGuestName("");
-        setGuestPhone("");
-        setOrderNote("");
-        setShowPaymentSimulation(false);
-        router.push("/orders");
-      }
-    } catch (err: any) {
-      setFormError(err.message || "Gagal melakukan pesanan. Silakan coba lagi.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const {
+    cart,
+    isAuthenticated,
+    user,
+    isLoading,
+    isSubmitting,
+    checkoutMode,
+    setCheckoutMode,
+    guestName,
+    setGuestName,
+    guestPhone,
+    setGuestPhone,
+    orderNote,
+    setOrderNote,
+    formError,
+    orderType,
+    setOrderType,
+    paymentMethod,
+    setPaymentMethod,
+    showPaymentSimulation,
+    setShowPaymentSimulation,
+    subtotal,
+    serviceFee,
+    total,
+    handleCheckoutClick,
+    executeCheckout,
+    router,
+  } = useCheckoutForm();
 
   if (isLoading) {
     return (
@@ -242,4 +186,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
