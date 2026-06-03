@@ -101,9 +101,6 @@ export function FoodCard({ item, viewType, isMatch = true }: FoodCardProps) {
 
             {/* Rating */}
             <div className="flex items-center gap-1 text-[10px] sm:text-xs text-stone-400 font-medium">
-              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 fill-current" />
-              <span className="text-amber-500 font-bold">{item.rating}</span>
-              <span className="text-stone-300">·</span>
               <span>Terjual {item.sold}</span>
             </div>
           </div>
@@ -191,9 +188,6 @@ export function FoodCard({ item, viewType, isMatch = true }: FoodCardProps) {
 
         {/* Rating row */}
         <div className="flex items-center gap-1 text-[10px] text-stone-400 font-medium mb-auto">
-          <Star className="w-3 h-3 text-amber-400 fill-current" />
-          <span className="text-amber-500 font-bold">{item.rating}</span>
-          <span className="text-stone-300">·</span>
           <span>Terjual {item.sold}</span>
         </div>
 

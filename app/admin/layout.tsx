@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import Link from "next/link";
 import { 
   FiHome, FiClipboard, FiShoppingBag, FiUsers, FiSettings, 
-  FiLogOut
+  FiLogOut, FiDollarSign, FiMessageSquare
 } from "react-icons/fi";
 import {
   AlertDialog,
@@ -28,15 +28,17 @@ export interface Order {
   date: string;
   phone: string;
   note: string;
+  orderType?: "DINE_IN" | "TAKE_AWAY";
+  createdAt?: string;
 }
 
 const INITIAL_ORDERS: Order[] = [
-  { id: "CB-0931", customerName: "Dzaky", items: "Lalapan Ayam Goreng x2, Es Teh Manis x2", total: 46000, status: "PENDING", date: "2026-06-01 16:45", phone: "08234372348", note: "[DINE IN]" },
-  { id: "CB-0930", customerName: "Budi Santoso", items: "Lalapan Bebek Bakar x1, Jeruk Hangat x1", total: 35000, status: "PROCESSING", date: "2026-06-01 16:20", phone: "081234567890", note: "[TAKE AWAY]" },
-  { id: "CB-0929", customerName: "Fahry Admin", items: "Lalapan Nila Goreng x2, Jus Alpukat x2", total: 64000, status: "PROCESSING", date: "2026-06-01 15:10", phone: "08122334455", note: "[DINE IN]" },
-  { id: "CB-0928", customerName: "Siti Rahma", items: "Lalapan Ayam Bakar x3, Es Jeruk x3", total: 78000, status: "PROCESSING", date: "2026-06-01 14:05", phone: "08987654321", note: "[DINE IN]" },
-  { id: "CB-0927", customerName: "Andi Wijaya", items: "Lalapan Lele Goreng x2, Es Teh x2", total: 36000, status: "COMPLETED", date: "2026-06-01 12:30", phone: "085544332211", note: "[TAKE AWAY]" },
-  { id: "CB-0926", customerName: "Dewi Lestari", items: "Lalapan Bebek Goreng x1, Es Campur x1", total: 38000, status: "CANCELLED", date: "2026-06-01 11:15", phone: "08776655443", note: "[TAKE AWAY]" },
+  { id: "CB-0931", customerName: "Dzaky", items: "Lalapan Ayam Goreng x2, Es Teh Manis x2", total: 46000, status: "PENDING", date: "2026-06-01 16:45", phone: "08234372348", note: "[DINE IN]", orderType: "DINE_IN" },
+  { id: "CB-0930", customerName: "Budi Santoso", items: "Lalapan Bebek Bakar x1, Jeruk Hangat x1", total: 35000, status: "PROCESSING", date: "2026-06-01 16:20", phone: "081234567890", note: "[TAKE AWAY]", orderType: "TAKE_AWAY" },
+  { id: "CB-0929", customerName: "Fahry Admin", items: "Lalapan Nila Goreng x2, Jus Alpukat x2", total: 64000, status: "PROCESSING", date: "2026-06-01 15:10", phone: "08122334455", note: "[DINE IN]", orderType: "DINE_IN" },
+  { id: "CB-0928", customerName: "Siti Rahma", items: "Lalapan Ayam Bakar x3, Es Jeruk x3", total: 78000, status: "PROCESSING", date: "2026-06-01 14:05", phone: "08987654321", note: "[DINE IN]", orderType: "DINE_IN" },
+  { id: "CB-0927", customerName: "Andi Wijaya", items: "Lalapan Lele Goreng x2, Es Teh x2", total: 36000, status: "COMPLETED", date: "2026-06-01 12:30", phone: "085544332211", note: "[TAKE AWAY]", orderType: "TAKE_AWAY" },
+  { id: "CB-0926", customerName: "Dewi Lestari", items: "Lalapan Bebek Goreng x1, Es Campur x1", total: 38000, status: "CANCELLED", date: "2026-06-01 11:15", phone: "08776655443", note: "[TAKE AWAY]", orderType: "TAKE_AWAY" },
 ];
 
 export const STATUS_CONFIG = {
@@ -51,6 +53,7 @@ interface AdminContextType {
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   updateOrderStatus: (id: string, newStatus: Order["status"]) => void;
   deleteOrder: (id: string) => void;
+  fetchOrders?: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -92,14 +95,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           id: o.id,
           customerName: o.user?.name || o.guestName || o.customerName || (o.userId ? "Member" : "Tamu"),
           items: itemsStr,
-          total: Number(o.total || o.totalPrice || 0),
+          total: Number(o.total || o.totalPrice || 0) + 2000,
           status: o.status === "CANCELED" ? "CANCELLED" : (o.status || "PENDING"),
           date: new Date(o.createdAt || o.date).toLocaleString("id-ID", {
             year: "numeric", month: "2-digit", day: "2-digit",
             hour: "2-digit", minute: "2-digit"
           }),
-          phone: o.user?.phone || o.guestPhone || o.phone || "",
-          note: o.note || ""
+          phone: o.user?.phone || o.guestPhone || o.phone || (o.note?.match(/\[HP:\s*([^\]]+)\]/)?.[1] || ""),
+          note: o.note?.replace(/\[HP:\s*([^\]]+)\]\s*/i, "").trim() || "",
+          orderType: o.orderType || (o.note?.includes("[DINE IN]") ? "DINE_IN" : "TAKE_AWAY"),
+          createdAt: o.createdAt || o.date || ""
         };
       });
       setOrders(mappedOrders);
@@ -167,8 +172,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setOrders(prev => prev.filter(o => o.id !== id));
   };
 
+
+  const isReceiptPage = pathname.endsWith("/receipt") || pathname.includes("/receipt/");
+
+  if (isReceiptPage) {
+    return (
+      <AdminContext.Provider value={{ orders, setOrders, updateOrderStatus, deleteOrder, fetchOrders }}>
+        {children}
+      </AdminContext.Provider>
+    );
+  }
+
   return (
-    <AdminContext.Provider value={{ orders, setOrders, updateOrderStatus, deleteOrder }}>
+    <AdminContext.Provider value={{ orders, setOrders, updateOrderStatus, deleteOrder, fetchOrders }}>
+
       <div className="flex min-h-screen bg-stone-50 font-sans">
         {/* Left Sidebar */}
         <aside className="w-64 fixed inset-y-0 left-0 bg-white border-r border-stone-100 flex flex-col justify-between z-20">
@@ -226,20 +243,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <FiShoppingBag className="w-4 h-4" />
                 Kelola Menu
               </Link>
-              <button
-                onClick={() => setInfoMessage("Fitur Data Pelanggan tersedia di tahap pengembangan berikutnya.")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-stone-500 hover:bg-stone-50 hover:text-stone-950 font-medium transition-all text-left cursor-pointer"
+              <Link
+                href="/admin/finance"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
+                  pathname === "/admin/finance"
+                    ? "bg-primary-50 text-primary-700 font-bold border-l-4 border-primary-500"
+                    : "text-stone-500 hover:bg-stone-50 hover:text-stone-950 font-medium"
+                }`}
               >
-                <FiUsers className="w-4 h-4" />
-                Pelanggan
-              </button>
-              <button
-                onClick={() => setInfoMessage("Pengaturan sistem tersedia di tahap pengembangan berikutnya.")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-stone-500 hover:bg-stone-50 hover:text-stone-950 font-medium transition-all text-left cursor-pointer"
+                <FiDollarSign className="w-4 h-4" />
+                Kelola Keuangan
+              </Link>
+              <Link
+                href="/admin/reviews"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
+                  pathname === "/admin/reviews"
+                    ? "bg-primary-50 text-primary-700 font-bold border-l-4 border-primary-500"
+                    : "text-stone-500 hover:bg-stone-50 hover:text-stone-950 font-medium"
+                }`}
+              >
+                <FiMessageSquare className="w-4 h-4" />
+                Ulasan & Masukan
+              </Link>
+              <Link
+                href="/admin/settings"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${
+                  pathname === "/admin/settings"
+                    ? "bg-primary-50 text-primary-700 font-bold border-l-4 border-primary-500"
+                    : "text-stone-500 hover:bg-stone-50 hover:text-stone-950 font-medium"
+                }`}
               >
                 <FiSettings className="w-4 h-4" />
                 Pengaturan
-              </button>
+              </Link>
             </nav>
           </div>
 

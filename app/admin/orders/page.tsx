@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useAdminOrders, STATUS_CONFIG, Order } from "../layout";
-import { FiSearch, FiTrash2, FiPlay, FiCheck, FiX, FiGrid, FiList, FiEdit } from "react-icons/fi";
+import { FiSearch, FiTrash2, FiPlay, FiCheck, FiX, FiGrid, FiList, FiEdit, FiRefreshCw, FiPrinter } from "react-icons/fi";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,11 +26,31 @@ const parseItems = (itemsStr: string) => {
 };
 
 export default function AdminOrdersPage() {
-  const { orders, updateOrderStatus, deleteOrder } = useAdminOrders();
+  const { orders, updateOrderStatus, deleteOrder, fetchOrders } = useAdminOrders();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  const handleRefresh = async () => {
+    if (!fetchOrders) return;
+    setIsRefreshing(true);
+    try {
+      await fetchOrders();
+    } catch (err) {
+      console.error("Gagal memperbarui pesanan:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   const handleUpdateStatus = (id: string, newStatus: Order["status"]) => {
     updateOrderStatus(id, newStatus);
@@ -40,11 +60,29 @@ export default function AdminOrdersPage() {
     const matchesSearch = o.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           o.items.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "ACTIVE" 
-      ? (o.status === "PENDING" || o.status === "PROCESSING") 
-      : o.status === statusFilter;
+    const matchesStatus = statusFilter === "ALL"
+      ? true
+      : statusFilter === "ACTIVE" 
+        ? (o.status === "PENDING" || o.status === "PROCESSING") 
+        : o.status === statusFilter;
     return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    const isActive = (status: Order["status"]) => status === "PENDING" || status === "PROCESSING";
+    const aActive = isActive(a.status);
+    const bActive = isActive(b.status);
+
+    // Active orders always come first
+    if (aActive && !bActive) return -1;
+    if (!aActive && bActive) return 1;
+
+    // Within same group: oldest first (first-come-first-served)
+    const dateA = new Date(a.createdAt || a.date).getTime();
+    const dateB = new Date(b.createdAt || b.date).getTime();
+    return dateA - dateB;
   });
+
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -55,30 +93,42 @@ export default function AdminOrdersPage() {
           <p className="text-stone-500 text-sm mt-1">Ubah status pesanan, cari detail, atau batalkan pesanan pelanggan.</p>
         </div>
 
-        {/* View Mode Toggle */}
-        <div className="flex bg-stone-100 rounded-xl p-1 gap-1 self-start sm:self-auto flex-shrink-0 items-center">
+        {/* Action buttons & View Mode Toggle */}
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-shrink-0">
           <button
-            onClick={() => setViewMode("grid")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-1.5 ${
-              viewMode === "grid" 
-                ? "bg-primary-500 text-white shadow-sm" 
-                : "text-stone-500 hover:text-stone-700"
-            }`}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold rounded-xl text-xs cursor-pointer transition-all active:scale-95 border border-stone-200/50"
+            title="Refresh Data Pesanan"
           >
-            <FiGrid className="w-3.5 h-3.5" />
-            Grid Kartu
+            <FiRefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span>{isRefreshing ? "Memperbarui..." : "Refresh Data"}</span>
           </button>
-          <button
-            onClick={() => setViewMode("table")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-1.5 ${
-              viewMode === "table" 
-                ? "bg-primary-500 text-white shadow-sm" 
-                : "text-stone-500 hover:text-stone-700"
-            }`}
-          >
-            <FiList className="w-3.5 h-3.5" />
-            Tabel List
-          </button>
+
+          <div className="flex bg-stone-100 rounded-xl p-1 gap-1 items-center">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-1.5 ${
+                viewMode === "grid" 
+                  ? "bg-primary-500 text-white shadow-sm" 
+                  : "text-stone-500 hover:text-stone-700"
+              }`}
+            >
+              <FiGrid className="w-3.5 h-3.5" />
+              Grid Kartu
+            </button>
+            <button
+              onClick={() => setViewMode("table")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all duration-200 flex items-center gap-1.5 ${
+                viewMode === "table" 
+                  ? "bg-primary-500 text-white shadow-sm" 
+                  : "text-stone-500 hover:text-stone-700"
+              }`}
+            >
+              <FiList className="w-3.5 h-3.5" />
+              Tabel List
+            </button>
+          </div>
         </div>
       </div>
 
@@ -98,7 +148,7 @@ export default function AdminOrdersPage() {
 
         {/* Status Chips Filter */}
         <div className="flex flex-wrap gap-1.5 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0 scrollbar-hide">
-          {["ACTIVE", "PENDING", "PROCESSING", "COMPLETED", "CANCELLED"].map((status) => (
+          {["ALL", "ACTIVE", "PENDING", "PROCESSING", "COMPLETED", "CANCELLED"].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -108,7 +158,7 @@ export default function AdminOrdersPage() {
                   : "bg-stone-50 text-stone-500 hover:bg-stone-100 hover:text-stone-900 border-stone-100"
               }`}
             >
-              {status === "ACTIVE" ? "Antrean Aktif" : STATUS_CONFIG[status as Order["status"]].label}
+              {status === "ALL" ? "Semua Pesanan" : status === "ACTIVE" ? "Antrean Aktif" : STATUS_CONFIG[status as Order["status"]].label}
             </button>
           ))}
         </div>
@@ -133,8 +183,8 @@ export default function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100 text-xs">
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order) => (
+                {paginatedOrders.length > 0 ? (
+                  paginatedOrders.map((order) => (
                     <tr key={order.id} className="hover:bg-stone-50/50 transition-colors">
                       {/* Plain ID (No click detail trigger) */}
                       <td className="py-5 px-6 font-mono font-bold text-stone-900">
@@ -144,7 +194,7 @@ export default function AdminOrdersPage() {
                       {/* Customer Details */}
                       <td className="py-5 px-6">
                         <p className="font-bold text-stone-850">{order.customerName}</p>
-                        <p className="text-[10px] text-stone-400 font-medium">{order.phone}</p>
+                        <p className="text-[10px] text-stone-400 font-medium">{order.phone || "-"}</p>
                       </td>
 
                       {/* Highlighted Menu Badges */}
@@ -165,7 +215,7 @@ export default function AdminOrdersPage() {
                       {/* Order Type Badge */}
                       <td className="py-5 px-6">
                         {(() => {
-                          const isDineIn = order.note?.includes("[DINE IN]");
+                          const isDineIn = order.orderType === "DINE_IN";
                           return (
                             <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${
                               isDineIn
@@ -227,6 +277,17 @@ export default function AdminOrdersPage() {
 
                           <span className="w-[1px] h-4 bg-stone-200 mx-1 select-none" />
 
+                          {/* Cetak Struk */}
+                          <a
+                            href={`/admin/orders/${order.id}/receipt`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 border border-stone-100 transition-colors cursor-pointer"
+                            title="Cetak Struk"
+                          >
+                            <FiPrinter className="w-3.5 h-3.5" />
+                          </a>
+
                           {/* Edit Status Manual */}
                           <button
                             onClick={() => setEditingOrder(order)}
@@ -282,9 +343,9 @@ export default function AdminOrdersPage() {
       ) : (
         /* 2. GRID KARTU VIEW (2 COLUMNS - SPACIOUS, MODAL-FREE & BUTTON-FOCUSED) */
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-8">
-          {filteredOrders.length > 0 ? (
-            filteredOrders.map((order) => {
-              const isDineIn = order.note?.includes("[DINE IN]");
+          {paginatedOrders.length > 0 ? (
+            paginatedOrders.map((order) => {
+              const isDineIn = order.orderType === "DINE_IN";
               const parsedItems = parseItems(order.items);
               // Extract user note (strip [DINE IN] / [TAKE AWAY] prefix)
               const cleanNote = order.note?.replace(/^\[(DINE IN|TAKE AWAY)\]\s*/i, "").trim();
@@ -329,7 +390,7 @@ export default function AdminOrdersPage() {
                     </div>
                     <div>
                       <p className="text-[9px] font-semibold text-stone-400 uppercase tracking-wider">No. WhatsApp</p>
-                      <p className="text-xs font-semibold text-stone-850 mt-0.5">📞 {order.phone}</p>
+                      <p className="text-xs font-semibold text-stone-850 mt-0.5">📞 {order.phone || "-"}</p>
                     </div>
                   </div>
 
@@ -407,6 +468,15 @@ export default function AdminOrdersPage() {
                             <FiX className="w-3.5 h-3.5 stroke-[3]" />
                             Tolak Pesanan
                           </button>
+                          <a
+                            href={`/admin/orders/${order.id}/receipt`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2.5 bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 border border-stone-100 rounded-xl transition-all cursor-pointer shrink-0"
+                            title="Cetak Struk"
+                          >
+                            <FiPrinter className="w-3.5 h-3.5" />
+                          </a>
                           <button
                             onClick={() => setEditingOrder(order)}
                             className="p-2.5 bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 border border-stone-100 rounded-xl transition-all cursor-pointer shrink-0"
@@ -428,6 +498,15 @@ export default function AdminOrdersPage() {
                             <FiX className="w-3.5 h-3.5 stroke-[3]" />
                             Batalkan Pesanan
                           </button>
+                          <a
+                            href={`/admin/orders/${order.id}/receipt`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2.5 bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 border border-stone-100 rounded-xl transition-all cursor-pointer shrink-0"
+                            title="Cetak Struk"
+                          >
+                            <FiPrinter className="w-3.5 h-3.5" />
+                          </a>
                           <button
                             onClick={() => setEditingOrder(order)}
                             className="p-2.5 bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 border border-stone-100 rounded-xl transition-all cursor-pointer shrink-0"
@@ -469,6 +548,15 @@ export default function AdminOrdersPage() {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
+                          <a
+                            href={`/admin/orders/${order.id}/receipt`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2.5 bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 border border-stone-100 rounded-xl transition-all cursor-pointer shrink-0"
+                            title="Cetak Struk"
+                          >
+                            <FiPrinter className="w-3.5 h-3.5" />
+                          </a>
                           <button
                             onClick={() => setEditingOrder(order)}
                             className="p-2.5 bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 border border-stone-100 rounded-xl transition-all cursor-pointer shrink-0"
@@ -488,6 +576,41 @@ export default function AdminOrdersPage() {
               Tidak ada pesanan ditemukan.
             </div>
           )}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-stone-150 pt-5 mt-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm animate-fade-in select-none">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            &larr; Sebelumnya
+          </button>
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-9 h-9 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                  currentPage === page
+                    ? "bg-primary-500 border-primary-500 text-white shadow-sm"
+                    : "bg-white border-stone-200 text-stone-500 hover:bg-stone-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            Selanjutnya &rarr;
+          </button>
         </div>
       )}
       {/* Dialog Edit Status Manual */}

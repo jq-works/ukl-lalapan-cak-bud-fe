@@ -40,7 +40,7 @@ export default function CheckoutPage() {
   }, [isAuthenticated]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const serviceFee = 0;
+  const serviceFee = 2000;
   const total = subtotal + serviceFee;
 
   const handleCheckoutClick = () => {
@@ -70,12 +70,15 @@ export default function CheckoutPage() {
     try {
       let success = false;
       const typeLabel = orderType === "dine_in" ? "DINE IN" : "TAKE AWAY";
-      const finalNote = `[${typeLabel}] ${orderNote}`.trim();
+      const activePhone = isAuthenticated ? (user?.phone || "") : guestPhone;
+      const phoneTag = activePhone ? `[HP: ${activePhone}] ` : "";
+      const finalNote = `[${typeLabel}] ${phoneTag}${orderNote}`.trim();
+      const apiOrderType = orderType === "dine_in" ? "DINE_IN" : "TAKE_AWAY";
 
       if (isAuthenticated) {
-        success = await checkout(undefined, finalNote, initialStatus);
+        success = await checkout(undefined, finalNote, initialStatus, apiOrderType, paymentMethod);
       } else {
-        success = await checkout({ name: guestName, phone: guestPhone }, finalNote, initialStatus);
+        success = await checkout({ name: guestName, phone: guestPhone }, finalNote, initialStatus, apiOrderType, paymentMethod);
       }
       
       if (success) {
@@ -405,8 +408,8 @@ export default function CheckoutPage() {
                     <span className="font-medium text-stone-800">Rp {subtotal.toLocaleString("id-ID")}</span>
                   </div>
                   <div className="flex justify-between text-stone-500">
-                    <span>Biaya Layanan & Penyiapan</span>
-                    <span className="text-[#2d7a3e] font-bold">Gratis</span>
+                    <span>Biaya Admin & Layanan</span>
+                    <span className="text-stone-700 font-semibold">Rp {serviceFee.toLocaleString("id-ID")}</span>
                   </div>
                   <div className="flex justify-between text-sm font-black text-stone-900 border-t border-stone-100 pt-2.5">
                     <span>Total Pembayaran</span>

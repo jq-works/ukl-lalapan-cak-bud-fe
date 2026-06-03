@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useAdminOrders, STATUS_CONFIG } from "./layout";
 import { FiTrendingUp, FiClock, FiCheckCircle } from "react-icons/fi";
@@ -21,6 +22,24 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const { orders } = useAdminOrders();
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [menuCount, setMenuCount] = useState<number>(0);
+
+  // Fetch menu count from API
+  useEffect(() => {
+    const fetchMenuCount = async () => {
+      try {
+        const res = await api.get("/menu-items");
+        const resData = res.data;
+        if (resData.success !== false) {
+          const items = resData.data || [];
+          setMenuCount(items.length);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil jumlah menu dari API:", err);
+      }
+    };
+    fetchMenuCount();
+  }, []);
 
   // Dashboard Stats Calculations
   const totalRevenue = orders
@@ -29,6 +48,8 @@ export default function AdminDashboardPage() {
 
   const pendingCount = orders.filter(o => o.status === "PENDING" || o.status === "PROCESSING").length;
   const completedCount = orders.filter(o => o.status === "COMPLETED").length;
+  const waitingOrdersCount = orders.filter(o => o.status === "PENDING").length;
+  const processingOrdersCount = orders.filter(o => o.status === "PROCESSING").length;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -79,16 +100,16 @@ export default function AdminDashboardPage() {
           </span>
         </div>
 
-        {/* Popular Menu */}
+        {/* Total Menu */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-accent-50 rounded-bl-full pointer-events-none transition-transform group-hover:scale-105" />
           <div className="w-10 h-10 rounded-xl bg-accent-50 text-accent-500 flex items-center justify-center mb-4 relative z-10">
             <MdOutlineFastfood className="w-5 h-5" />
           </div>
-          <h4 className="text-[17px] font-bold text-stone-900 truncate">Lalapan Ayam Bakar</h4>
-          <p className="text-sm text-stone-500 font-medium mt-1">Menu Terlaris Hari Ini</p>
-          <span className="text-[11px] text-accent-700 bg-accent-50 px-2.5 py-1 rounded-full font-semibold inline-block mt-3 border border-accent-100">
-            Terjual 32 Porsi
+          <h4 className="text-2xl font-bold text-stone-900">{menuCount} Menu</h4>
+          <p className="text-sm text-stone-500 font-medium mt-1">Menu Terdaftar di Database</p>
+          <span className="text-[11px] text-[#2d7a3e] bg-emerald-50 px-2.5 py-1 rounded-full font-semibold inline-block mt-3 border border-emerald-100">
+            Aktif & Tersedia
           </span>
         </div>
       </div>
@@ -115,15 +136,15 @@ export default function AdminDashboardPage() {
                     <span className="font-mono font-bold text-stone-900">#{order.id}</span>
                     <span className="text-stone-700 font-semibold">{order.customerName}</span>
                     <span className={`text-[9px] font-semibold px-2 py-0.25 rounded-md border ${
-                      order.items.includes("[DINE IN]") 
+                      order.orderType === "DINE_IN" 
                         ? "bg-purple-50 text-purple-700 border-purple-100" 
                         : "bg-orange-55/10 text-orange-700 border-orange-100"
                     }`}>
-                      {order.items.includes("[DINE IN]") ? "Dine In" : "Take Away"}
+                      {order.orderType === "DINE_IN" ? "Dine In" : "Take Away"}
                     </span>
                   </div>
                   <p className="text-stone-550 truncate max-w-[200px] sm:max-w-sm">
-                    {order.items.replace(/\[(DINE IN|TAKE AWAY)\]\s*/g, "")}
+                    {order.items}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -138,51 +159,44 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Operating Control Card */}
-        <div className="bg-gradient-to-br from-primary-700 via-primary-850 to-primary-950 rounded-2xl p-6 text-white relative overflow-hidden flex flex-col justify-between shadow-lg shadow-green-950/20 min-h-[260px]">
+        {/* Quick Action: Kelola Pesanan */}
+        <div className="bg-gradient-to-br from-stone-850 via-stone-900 to-stone-950 rounded-2xl p-6 text-white relative overflow-hidden flex flex-col justify-between shadow-lg shadow-stone-950/20 min-h-[260px]">
           {/* Radial Glow Overlay */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(58,158,82,0.25),transparent_60%)] pointer-events-none" />
-          {/* Vignette Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-primary-500/10 via-primary-600/30 to-primary-950/80 pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(58,158,82,0.15),transparent_60%)] pointer-events-none" />
           
           {/* Dot Grid Pattern */}
           <div 
-            className="absolute inset-0 opacity-[0.08] pointer-events-none"
+            className="absolute inset-0 opacity-[0.05] pointer-events-none"
             style={{
               backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
               backgroundSize: "20px 20px"
             }}
           />
 
-          {/* Traditional food visual identity accent */}
-          <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full border border-white/20 opacity-15 flex items-center justify-center pointer-events-none select-none z-0">
-            <span className="text-5xl">🍲</span>
-          </div>
-
           <div className="relative z-10">
-            <h3 className="font-bold text-lg text-white">Status Operasional</h3>
-            <p className="text-white/90 text-xs mt-1">Atur jam buka/tutup warung secara real-time.</p>
+            <span className="text-[10px] text-primary-450 font-bold uppercase tracking-wider bg-primary-950/60 border border-primary-800/40 px-2.5 py-0.5 rounded-full inline-block mb-3">
+              Aksi Cepat
+            </span>
+            <h3 className="font-bold text-lg text-white">Kelola Pesanan</h3>
+            <p className="text-stone-400 text-xs mt-1">Pantau dan ubah status pesanan pelanggan secara langsung.</p>
           </div>
 
-          <div className="my-6 space-y-4 relative z-10">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-white/90 font-medium">Status Warung:</span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 backdrop-blur-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                BUKA
-              </span>
+          <div className="my-5 grid grid-cols-2 gap-4 relative z-10">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-sm">
+              <span className="block text-[10px] font-bold text-amber-400 uppercase tracking-wider">Menunggu</span>
+              <span className="block text-xl font-extrabold text-white mt-1">{waitingOrdersCount}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-white/90 font-medium">Sistem Pemesanan:</span>
-              <span className="text-xs font-semibold text-white">Online (WhatsApp & Web)</span>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-sm">
+              <span className="block text-[10px] font-bold text-blue-400 uppercase tracking-wider">Diproses</span>
+              <span className="block text-xl font-extrabold text-white mt-1">{processingOrdersCount}</span>
             </div>
           </div>
 
           <button 
-            onClick={() => setInfoMessage("Fitur untuk menutup toko sementara dinonaktifkan.")}
-            className="w-full h-11 bg-white/10 border border-white/20 backdrop-blur-sm hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer relative z-10 shadow-sm"
+            onClick={() => router.push("/admin/orders")}
+            className="w-full h-11 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl text-xs transition-all duration-200 active:scale-95 cursor-pointer relative z-10 shadow-md shadow-green-900/30 flex items-center justify-center gap-1.5"
           >
-            Tutup Warung Sementara
+            <span>Buka Dashboard Pesanan</span>
           </button>
         </div>
       </div>

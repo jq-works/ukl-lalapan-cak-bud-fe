@@ -212,7 +212,17 @@ export function OrderHistory() {
                   console.error("Failed to fetch stashed guest order status:", e);
                 }
               }
-              setLocalGuestOrders(updatedGuests);
+              const sortedGuests = updatedGuests.sort((a, b) => {
+                const isActive = (status: Order["status"]) => status === "PENDING" || status === "PROCESSING";
+                const aActive = isActive(a.status);
+                const bActive = isActive(b.status);
+                if (aActive && !bActive) return -1;
+                if (!aActive && bActive) return 1;
+                const dateA = new Date(a.createdAt || a.date).getTime();
+                const dateB = new Date(b.createdAt || b.date).getTime();
+                return dateB - dateA;
+              });
+              setLocalGuestOrders(sortedGuests);
               setIsLocalGuestsLoading(false);
             };
             fetchGuestStatuses();
@@ -301,7 +311,20 @@ export function OrderHistory() {
 
   const displayedMemberOrders = React.useMemo(() => {
     if (isAuthenticated && user) {
-      return orders;
+      return [...orders].sort((a, b) => {
+        const isActive = (status: Order["status"]) => status === "PENDING" || status === "PROCESSING";
+        const aActive = isActive(a.status);
+        const bActive = isActive(b.status);
+
+        // Active orders always come first
+        if (aActive && !bActive) return -1;
+        if (!aActive && bActive) return 1;
+
+        // Within same group: newest first
+        const dateA = new Date(a.createdAt || a.date).getTime();
+        const dateB = new Date(b.createdAt || b.date).getTime();
+        return dateB - dateA;
+      });
     }
     return [];
   }, [orders, isAuthenticated, user]);

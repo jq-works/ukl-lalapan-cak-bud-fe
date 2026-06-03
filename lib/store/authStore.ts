@@ -206,7 +206,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (newPassword) {
         payload.newPassword = newPassword;
       }
-      const response = await api.post("/auth/update-profile", payload);
+      const response = await api.patch("/auth/update-profile", payload);
       const data = response.data;
 
       if (data.success === false) {

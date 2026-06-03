@@ -21,6 +21,9 @@ export interface Order {
   estimatedTime: string;
   phone?: string;
   customerName?: string;
+  orderType?: "DINE_IN" | "TAKE_AWAY";
+  note?: string;
+  createdAt?: string;
 }
 
 interface CartState {
@@ -42,7 +45,7 @@ interface CartState {
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  checkout: (guestDetails?: { name: string; phone: string }, note?: string, initialStatus?: Order["status"]) => Promise<boolean>;
+  checkout: (guestDetails?: { name: string; phone: string }, note?: string, initialStatus?: Order["status"], orderType?: "DINE_IN" | "TAKE_AWAY", paymentMethod?: "qris" | "transfer" | "cash") => Promise<boolean>;
   reorder: (order: Order) => void;
   refreshMenu: () => Promise<void>;
   fetchOrders: () => Promise<void>;
@@ -58,7 +61,7 @@ const mapApiMenuItemToFoodItem = (apiItem: any): FoodItem => {
     category: apiItem.category?.name || "Lalapan",
     image: apiItem.imageUrl || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80",
     rating: apiItem.rating || 4.8,
-    sold: apiItem.sold || "10+",
+    sold: typeof apiItem.soldCount === "number" ? `${apiItem.soldCount}` : (apiItem.sold || "0"),
     isTerlaris: apiItem.isTerlaris || false,
     isAvailable: apiItem.isAvailable !== false,
   };
@@ -150,12 +153,12 @@ export const useCartStore = create<CartState>((set) => ({
     set({ cart: [] });
   },
 
-  checkout: async (guestDetails, note, initialStatus) => {
+  checkout: async (guestDetails, note, initialStatus, orderType, paymentMethod) => {
     const { cart, clearCart, fetchOrders } = useCartStore.getState();
     if (cart.length === 0) return false;
 
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const serviceFee = 0;
+    const serviceFee = 2000;
     const total = subtotal + serviceFee;
     
     const savedUserStr = typeof window !== "undefined" ? localStorage.getItem("cakbud_user") : null;
@@ -181,11 +184,13 @@ export const useCartStore = create<CartState>((set) => ({
           guestName: guestDetails.name,
           guestPhone: guestDetails.phone,
           items: apiItems,
+          orderType: orderType || "TAKE_AWAY",
           note: note || ""
         });
       } else if (savedToken) {
         response = await api.post("/orders", {
           items: apiItems,
+          orderType: orderType || "TAKE_AWAY",
           note: note || ""
         });
       } else {
@@ -197,25 +202,51 @@ export const useCartStore = create<CartState>((set) => ({
       }
 
       const resData = response.data;
+      if (resData.success === false) {
+        throw new Error(resData.message || "Gagal melakukan pemesanan.");
+      }
       const createdOrder = resData.order || resData.data || {};
+
+      // Payment integration based on paymentMethod
+      if (paymentMethod === "qris" || paymentMethod === "transfer" || paymentMethod === "cash") {
+        try {
+          const apiMethod = 
+            paymentMethod === "qris" ? "QRIS" : 
+            paymentMethod === "transfer" ? "BANK_BCA" : 
+            paymentMethod === "cash" ? "CASH" : undefined;
+          
+          if (apiMethod) {
+            if (guestDetails) {
+              await api.post(`/payments/guest/${createdOrder.id}`, { method: apiMethod });
+            } else {
+              await api.post(`/payments/${createdOrder.id}`, { method: apiMethod });
+            }
+          }
+        } catch (payErr) {
+          console.error("Gagal memproses pembayaran otomatis di server:", payErr);
+        }
+      }
 
       clearCart();
       set({ isCartOpen: false });
 
       if (savedToken) {
-        await fetchOrders();
+        fetchOrders();
       } else {
         const dateObj = new Date();
+        const paidStatus = (paymentMethod === "qris" || paymentMethod === "transfer" || paymentMethod === "cash") ? "PROCESSING" : "PENDING";
         const guestOrderObj: Order = {
           id: createdOrder.id || `CB-${Math.floor(1000 + Math.random() * 9000)}`,
           items: [...cart],
           total: total,
-          status: createdOrder.status === "CANCELED" ? "CANCELLED" : (createdOrder.status || "PENDING"),
+          status: paidStatus,
           date: dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
           time: dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
           estimatedTime: "20-30 Menit",
           phone,
           customerName,
+          orderType: createdOrder.orderType || orderType || "TAKE_AWAY",
+          note: note || ""
         };
         set((state) => ({ orders: [guestOrderObj, ...state.orders] }));
 
@@ -241,19 +272,29 @@ export const useCartStore = create<CartState>((set) => ({
 
   reorder: (order) => {
     set((state) => {
-      const newCart = [...state.cart];
+      let updatedCart = [...state.cart];
       order.items.forEach((orderedItem) => {
-        const existing = newCart.find((i) => i.id === orderedItem.id);
-        if (existing) {
-          existing.quantity += orderedItem.quantity;
+        const existingIdx = updatedCart.findIndex((i) => i.id === orderedItem.id);
+        if (existingIdx > -1) {
+          const existingItem = updatedCart[existingIdx];
+          updatedCart[existingIdx] = {
+            ...existingItem,
+            quantity: existingItem.quantity + orderedItem.quantity
+          };
         } else {
-          newCart.push({ ...orderedItem });
+          updatedCart.push({
+            id: orderedItem.id,
+            name: orderedItem.name,
+            price: orderedItem.price,
+            quantity: orderedItem.quantity,
+            image: orderedItem.image
+          });
         }
       });
       if (typeof window !== "undefined") {
-        localStorage.setItem("cakbud_cart", JSON.stringify(newCart));
+        localStorage.setItem("cakbud_cart", JSON.stringify(updatedCart));
       }
-      return { cart: newCart, isCartOpen: true };
+      return { cart: updatedCart, isCartOpen: true };
     });
   },
 
@@ -289,6 +330,60 @@ export const useCartStore = create<CartState>((set) => ({
   fetchOrders: async () => {
     const savedToken = Cookies.get("cakbud_token") || (typeof window !== "undefined" ? localStorage.getItem("cakbud_token") : null);
     if (!savedToken) {
+      if (typeof window !== "undefined") {
+        const savedGuests = localStorage.getItem("cakbud_guest_order_ids");
+        if (savedGuests) {
+          try {
+            const guestIds: string[] = JSON.parse(savedGuests);
+            if (guestIds.length > 0) {
+              const fetchPromises = guestIds.map(async (id) => {
+                try {
+                  const res = await api.get(`/orders/guest/track/${id}`);
+                  if (res.status === 200) {
+                    const resData = res.data;
+                    const o = resData.data || resData.order;
+                    if (o) {
+                      const apiItems = o.orderItems || o.items || [];
+                      const mappedItems: CartItem[] = apiItems.map((item: any) => ({
+                        id: item.menuItem?.id || item.menuItemId || "",
+                        name: item.menuItem?.name || item.name || "Menu",
+                        price: Number(item.menuItem?.price || item.price || 0),
+                        quantity: Number(item.quantity || 1),
+                        image: item.menuItem?.imageUrl || item.image || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80"
+                      }));
+                      const dateObj = new Date(o.createdAt || o.date);
+                      return {
+                        id: o.id,
+                        items: mappedItems,
+                        total: Number(o.total || o.totalPrice || 0) + 2000,
+                        status: o.status === "CANCELED" ? "CANCELLED" : (o.status || "PENDING"),
+                        date: dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
+                        time: dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
+                        estimatedTime: "20-30 Menit",
+                        phone: o.phone || o.customerPhone || o.guestPhone || "",
+                        customerName: o.guestName || o.customerName || "Tamu",
+                        orderType: o.orderType || (o.note?.includes("[DINE IN]") ? "DINE_IN" : "TAKE_AWAY"),
+                        note: o.note || "",
+                        createdAt: o.createdAt || o.date || ""
+                      } as Order;
+                    }
+                  }
+                } catch (e) {
+                  console.error("Gagal mengambil status pesanan tamu di store:", e);
+                }
+                return null;
+              });
+
+              const results = await Promise.all(fetchPromises);
+              const updatedGuests = results.filter((o): o is Order => o !== null);
+              set({ orders: updatedGuests });
+              return;
+            }
+          } catch (e) {
+            console.error("Gagal mengurai ID pesanan tamu di store:", e);
+          }
+        }
+      }
       set({ orders: [] });
       return;
     }
@@ -310,13 +405,16 @@ export const useCartStore = create<CartState>((set) => ({
           return {
             id: o.id,
             items: mappedItems,
-            total: Number(o.total || o.totalPrice || 0),
+            total: Number(o.total || o.totalPrice || 0) + 2000,
             status: o.status === "CANCELED" ? "CANCELLED" : (o.status || "PENDING"),
             date: dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
             time: dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
             estimatedTime: "20-30 Menit",
-            phone: o.phone || o.customerPhone || "",
-            customerName: o.user?.name || o.customerName || "Member"
+            phone: o.user?.phone || o.phone || o.customerPhone || "",
+            customerName: o.user?.name || o.customerName || "Member",
+            orderType: o.orderType || (o.note?.includes("[DINE IN]") ? "DINE_IN" : "TAKE_AWAY"),
+            note: o.note || "",
+            createdAt: o.createdAt || o.date || ""
           };
         });
         set({ orders: mappedOrders });

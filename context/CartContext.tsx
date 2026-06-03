@@ -17,11 +17,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     refreshMenu();
   }, [refreshMenu]);
 
-  // Fetch orders automatically on authentication state changes
+  // Fetch orders automatically on mount/auth changes and poll every 10 seconds
   useEffect(() => {
-    if (isAuthenticated && token) {
-      fetchOrders();
-    }
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 10000);
+    return () => clearInterval(interval);
   }, [token, isAuthenticated, fetchOrders]);
 
   return <>{children}</>;

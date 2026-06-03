@@ -220,9 +220,9 @@ export default function CustomerFooter() {
               <div className="flex items-start gap-2.5">
                 <FaMapMarkerAlt className="text-white mt-1 flex-shrink-0" size={13} />
                 <p className="text-[13px] text-white/90 leading-relaxed">
-                  Jl. Pahlawan No. 12, Kec. Banyumas,
+                  Jl. Danau Ranau, Kec. Kedungkandang,
                   <br />
-                  Kab. Banyumas, Jawa Tengah
+                  Kota Malang, Jawa Timur
                 </p>
               </div>
 
@@ -273,7 +273,7 @@ export default function CustomerFooter() {
           <p className="flex items-center gap-1 font-medium">
             Dibuat dengan{" "}
             <FaHeart className="text-accent-500 mx-0.5 animate-pulse" size={11} />{" "}
-            untuk penggemar kuliner Banyumas
+            untuk penggemar kuliner Lalapan Cak Bud
           </p>
         </div>
 

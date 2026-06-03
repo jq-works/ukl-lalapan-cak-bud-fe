@@ -19,6 +19,7 @@ interface Review {
   suggestions?: string;
   date: string;
   role?: string;
+  createdAt?: string;
 }
 
 const INITIAL_REVIEWS: Review[] = [
@@ -43,6 +44,30 @@ export default function UlasanPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const [sortBy, setSortBy] = useState<"NEWEST" | "HIGHEST_RATING">("NEWEST");
+  const [reviewPage, setReviewPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const sortedReviews = React.useMemo(() => {
+    return [...reviews].sort((a, b) => {
+      if (sortBy === "HIGHEST_RATING") {
+        if (b.rating !== a.rating) {
+          return b.rating - a.rating;
+        }
+      }
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.date).getTime();
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : new Date(b.date).getTime();
+      return timeB - timeA;
+    });
+  }, [reviews, sortBy]);
+
+  useEffect(() => {
+    setReviewPage(1);
+  }, [reviews.length, sortBy]);
+
+  const totalReviewPages = Math.ceil(sortedReviews.length / itemsPerPage);
+  const paginatedReviews = sortedReviews.slice((reviewPage - 1) * itemsPerPage, reviewPage * itemsPerPage);
+
   // Fetch reviews from API
   const fetchReviews = async () => {
     try {
@@ -65,6 +90,7 @@ export default function UlasanPage() {
           date: new Date(r.createdAt || Date.now()).toLocaleDateString("id-ID", {
             year: "numeric", month: "short", day: "numeric"
           }),
+          createdAt: r.createdAt || new Date().toISOString()
         }));
         // If API reviews is empty, use initial fallback data so it's not empty
         setReviews(mapped.length > 0 ? mapped : INITIAL_REVIEWS);
@@ -276,10 +302,38 @@ export default function UlasanPage() {
 
             {/* Right Column: Review Feed */}
             <div className="lg:col-span-2 space-y-4">
-              <h3 className="text-sm font-extrabold text-stone-900 uppercase tracking-wider">Feed Ulasan & Masukan Pelanggan</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-stone-100 pb-3">
+                <h3 className="text-sm font-extrabold text-stone-900 uppercase tracking-wider">Feed Ulasan & Masukan Pelanggan</h3>
+                
+                {/* Sort Controls */}
+                <div className="flex items-center gap-1 bg-stone-100/80 p-0.5 border border-stone-200/40 rounded-xl self-start sm:self-auto shrink-0 select-none">
+                  <button
+                    type="button"
+                    onClick={() => setSortBy("NEWEST")}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      sortBy === "NEWEST"
+                        ? "bg-primary-500 text-white shadow-sm"
+                        : "text-stone-500 hover:text-stone-750"
+                    }`}
+                  >
+                    Terbaru
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSortBy("HIGHEST_RATING")}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      sortBy === "HIGHEST_RATING"
+                        ? "bg-primary-500 text-white shadow-sm"
+                        : "text-stone-500 hover:text-stone-750"
+                    }`}
+                  >
+                    Rating Tertinggi
+                  </button>
+                </div>
+              </div>
               
-              <div className="space-y-4">
-                {reviews.map((rev) => (
+              <div className="space-y-4 pt-1">
+                {paginatedReviews.map((rev) => (
                   <div key={rev.id} className="bg-white border border-stone-150 rounded-2xl p-5 shadow-sm space-y-3">
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex items-center gap-3">
@@ -318,6 +372,44 @@ export default function UlasanPage() {
                     )}
                   </div>
                 ))}
+
+                {/* Pagination Controls */}
+                {totalReviewPages > 1 && (
+                  <div className="flex items-center justify-between border-t border-stone-100 pt-4 mt-4 bg-white select-none">
+                    <button
+                      type="button"
+                      onClick={() => setReviewPage(prev => Math.max(prev - 1, 1))}
+                      disabled={reviewPage === 1}
+                      className="px-3 py-1.5 border border-stone-200 hover:bg-stone-50 rounded-xl text-[11px] font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      &larr; Seb.
+                    </button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalReviewPages }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setReviewPage(page)}
+                          className={`w-8 h-8 text-[11px] font-bold rounded-xl border transition-all cursor-pointer ${
+                            reviewPage === page
+                              ? "bg-primary-500 border-primary-500 text-white shadow-sm"
+                              : "bg-white border-stone-200 text-stone-500 hover:bg-stone-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setReviewPage(prev => Math.min(prev + 1, totalReviewPages))}
+                      disabled={reviewPage === totalReviewPages}
+                      className="px-3 py-1.5 border border-stone-200 hover:bg-stone-50 rounded-xl text-[11px] font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1"
+                    >
+                      Sel. &rarr;
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

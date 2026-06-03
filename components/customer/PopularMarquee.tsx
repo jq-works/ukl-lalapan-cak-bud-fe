@@ -137,11 +137,6 @@ export function PopularMarquee() {
                       {item.name}
                     </h4>
                     <div className="flex items-center gap-2 text-[11px] text-stone-400 font-medium mb-1.5">
-                      <div className="flex items-center text-amber-500 font-bold">
-                        <Star className="w-3.5 h-3.5 fill-current mr-0.5" />
-                        {item.rating}
-                      </div>
-                      <span>•</span>
                       <span>Terjual {item.sold}</span>
                     </div>
                     <p className="text-sm font-extrabold text-[#2d7a3e]">

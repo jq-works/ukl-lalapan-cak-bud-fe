@@ -87,6 +87,13 @@ export default function AdminMenuPage() {
     fetchInitialData();
   }, []);
 
+  const [itemPage, setItemPage] = useState(1);
+  const itemsPerPage = 6;
+
+  useEffect(() => {
+    setItemPage(1);
+  }, [searchQuery, selectedCategoryFilter]);
+
   const fetchInitialData = async () => {
     setIsLoading(true);
     setApiError(null);
@@ -394,6 +401,9 @@ export default function AdminMenuPage() {
     return matchesSearch && matchesCategory;
   });
 
+  const totalItemPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice((itemPage - 1) * itemsPerPage, itemPage * itemsPerPage);
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header section with actions */}
@@ -555,7 +565,7 @@ export default function AdminMenuPage() {
               {filteredItems.length > 0 ? (
                 viewMode === "grid" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredItems.map((item) => (
+                    {paginatedItems.map((item) => (
                       <div 
                         key={item.id} 
                         className={`bg-white border rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between transition-all group ${
@@ -659,7 +669,7 @@ export default function AdminMenuPage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-100 text-xs">
-                          {filteredItems.map((item) => (
+                          {paginatedItems.map((item) => (
                             <tr key={item.id} className="hover:bg-stone-50/50 transition-colors">
                               {/* Image */}
                               <td className="py-3.5 px-6">
@@ -746,6 +756,44 @@ export default function AdminMenuPage() {
               ) : (
                 <div className="py-16 bg-white border border-stone-200 rounded-3xl text-center text-stone-400 font-bold uppercase tracking-wider text-xs">
                   Tidak ada menu makanan ditemukan.
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {totalItemPages > 1 && (
+                <div className="flex items-center justify-between border-t border-stone-150 pt-5 mt-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm animate-fade-in select-none">
+                  <button
+                    type="button"
+                    onClick={() => setItemPage(prev => Math.max(prev - 1, 1))}
+                    disabled={itemPage === 1}
+                    className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    &larr; Sebelumnya
+                  </button>
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: totalItemPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => setItemPage(page)}
+                        className={`w-9 h-9 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                          itemPage === page
+                            ? "bg-primary-500 border-primary-500 text-white shadow-sm"
+                            : "bg-white border-stone-200 text-stone-500 hover:bg-stone-50"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setItemPage(prev => Math.min(prev + 1, totalItemPages))}
+                    disabled={itemPage === totalItemPages}
+                    className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    Selanjutnya &rarr;
+                  </button>
                 </div>
               )}
             </div>
