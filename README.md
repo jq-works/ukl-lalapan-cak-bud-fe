@@ -71,6 +71,14 @@ ukl-lalapan-cak-bud-fe/
 │   ├── api.ts                # Konfigurasi Axios instance & interceptor token
 │   ├── data.ts               # Binding tipe data & interface TypeScript
 │   ├── utils.ts              # Fungsi pembantu penggabungan kelas CSS (cn)
+│   ├── services/             # Layanan (Service) API modular terpisah
+│   │   ├── index.ts          # Ekspor utama semua layanan
+│   │   ├── authService.ts    # API Autentikasi (login, register, profil)
+│   │   ├── menuService.ts    # API Menu makanan (CRUD, status ketersediaan)
+│   │   ├── categoryService.ts# API Kategori menu (CRUD)
+│   │   ├── orderService.ts   # API Pesanan (checkout, track guest, admin list)
+│   │   ├── paymentService.ts # API Transaksi & Pembayaran (tunai, transfer, QRIS)
+│   │   └── reviewService.ts  # API Ulasan & feedback (CRUD)
 │   └── store/                # Store data global Zustand
 │       └── cartStore.ts      # State keranjang belanja, proses checkout, dan pemetaan pesanan
 └── public/                   # Direktori Aset Statis
@@ -118,17 +126,63 @@ npm run build
 
 ---
 
-## 🔌 Integrasi API
+## 🔌 Integrasi API & Data Fetching
 
 Aplikasi front-end ini terintegrasi langsung dengan server backend menggunakan endpoint dasar yang didefinisikan pada `.env`.
-Berikut adalah endpoint utama yang digunakan:
-- `POST /auth/login` & `POST /auth/register` — Autentikasi akun pengguna.
-- `GET /menu-items` & `POST /menu-items` — Mengambil dan memodifikasi katalog makanan.
-- `GET /categories` — Mengambil daftar kategori menu makanan.
-- `POST /orders` & `GET /orders/user` — Checkout pesanan member dan memuat riwayat transaksi.
-- `POST /orders/guest` & `GET /orders/guest/{orderId}` — Checkout pesanan guest umum dan pelacakan pesanan.
-- `POST /payments/{orderId}` & `PATCH /payments/{paymentId}/status` — Mendaftarkan pembayaran dan konfirmasi pembayaran.
-- `GET /reviews` & `POST /reviews` — Publikasi ulasan pelanggan dan kalkulasi statistik performa warung.
+
+### 🏗️ Arsitektur Data Fetching (Modular Services)
+Untuk menjaga kode tetap bersih, mudah dibaca, dan terstruktur, semua pemanggilan REST API (menggunakan Axios) dikelompokkan ke dalam modul layanan di dalam folder `lib/services/`. Hal ini memisahkan logika UI/State dengan logika komunikasi server.
+
+#### Daftar Service & Endpoint:
+1. **`authService`** (`lib/services/authService.ts`)
+   - `login(email, password)` ➔ `POST /auth/login`
+   - `register({ name, email, password, phone })` ➔ `POST /auth/register`
+   - `updateProfile(payload)` ➔ `PATCH /auth/update-profile`
+2. **`menuService`** (`lib/services/menuService.ts`)
+   - `getMenuItems()` ➔ `GET /menu-items`
+   - `createMenuItem(payload)` ➔ `POST /menu-items`
+   - `updateMenuItem(id, payload)` ➔ `PATCH /menu-items/{id}`
+   - `deleteMenuItem(id)` ➔ `DELETE /menu-items/{id}`
+3. **`categoryService`** (`lib/services/categoryService.ts`)
+   - `getCategories()` ➔ `GET /categories`
+   - `createCategory(payload)` ➔ `POST /categories`
+   - `updateCategory(id, payload)` ➔ `PATCH /categories/{id}`
+   - `deleteCategory(id)` ➔ `DELETE /categories/{id}`
+4. **`orderService`** (`lib/services/orderService.ts`)
+   - `getOrders()` ➔ `GET /orders` (Admin)
+   - `getMyOrders()` ➔ `GET /orders/me` (Member)
+   - `getOrderDetail(id)` ➔ `GET /orders/{id}`
+   - `createMemberOrder(payload)` ➔ `POST /orders`
+   - `createGuestOrder(payload)` ➔ `POST /orders/guest`
+   - `trackGuestOrder(id)` ➔ `GET /orders/guest/track/{id}`
+   - `updateOrderStatus(id, status)` ➔ `PATCH /orders/{id}/status`
+5. **`paymentService`** (`lib/services/paymentService.ts`)
+   - `getPayments()` ➔ `GET /payments` (Admin)
+   - `createMemberPayment(orderId, payload)` ➔ `POST /payments/{orderId}`
+   - `createGuestPayment(orderId, payload)` ➔ `POST /payments/guest/{orderId}`
+6. **`reviewService`** (`lib/services/reviewService.ts`)
+   - `getReviews()` ➔ `GET /reviews`
+   - `createReview(payload)` ➔ `POST /reviews`
+   - `deleteReview(id)` ➔ `DELETE /reviews/{id}`
+
+#### Contoh Penggunaan Service:
+Cukup impor service yang diinginkan dari `@/lib/services` dan panggil fungsinya secara asinkron (`async/await`):
+```typescript
+import { menuService } from "@/lib/services";
+
+// Di dalam komponen atau store:
+async function loadMenu() {
+  try {
+    const res = await menuService.getMenuItems();
+    if (res.status === 200) {
+      const items = res.data.data;
+      console.log("Menu loaded successfully:", items);
+    }
+  } catch (error) {
+    console.error("Gagal memuat menu:", error);
+  }
+}
+```
 
 ---
 
