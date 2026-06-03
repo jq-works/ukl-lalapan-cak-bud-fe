@@ -3,35 +3,17 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { 
-  FiSearch, FiDollarSign, FiTrendingUp, FiCreditCard, 
-  FiGrid, FiList, FiRefreshCw, FiXCircle
+  FiSearch, FiGrid, FiList, FiRefreshCw, FiXCircle
 } from "react-icons/fi";
-
-interface PaymentOrder {
-  id: string;
-  totalPrice: number;
-  status: string;
-  orderType: "DINE_IN" | "TAKE_AWAY";
-  note?: string;
-  createdAt: string;
-  guestName?: string | null;
-  guestPhone?: string | null;
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-}
-
-interface Payment {
-  id: string;
-  amount: number;
-  method: string;
-  status: string;
-  createdAt: string;
-  orderId: string;
-  order?: PaymentOrder;
-}
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FinanceStatsCards } from "@/components/admin/FinanceStatsCards";
+import { FinanceTable, Payment, PaymentOrder } from "@/components/admin/FinanceTable";
 
 export default function AdminFinancePage() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -205,122 +187,17 @@ export default function AdminFinancePage() {
         </div>
       ) : (
         <div className="space-y-6 animate-fade-in">
-          {/* Statistics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* 1. TOTAL REVENUE */}
-            <div className="bg-white border border-stone-100 rounded-3xl p-5 shadow-xs flex items-center gap-4 relative overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="absolute right-0 top-0 w-24 h-24 bg-primary-500/5 rounded-bl-full pointer-events-none transition-all group-hover:scale-105" />
-              <div className="w-12 h-12 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-700">
-                <FiDollarSign className="w-6 h-6 stroke-[2.5]" />
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Total Pendapatan</p>
-                <p className="text-xl font-black text-stone-900">Rp {totalRevenue.toLocaleString("id-ID")}</p>
-                <p className="text-[9px] text-stone-400 font-semibold leading-none pt-0.5">Dari transaksi berhasil</p>
-              </div>
-            </div>
-
-            {/* 2. TOTAL VOLUME */}
-            <div className="bg-white border border-stone-100 rounded-3xl p-5 shadow-xs flex items-center gap-4 relative overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/5 rounded-bl-full pointer-events-none transition-all group-hover:scale-105" />
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700">
-                <FiTrendingUp className="w-6 h-6 stroke-[2.5]" />
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Volume Penjualan</p>
-                <p className="text-xl font-black text-stone-900">{totalTransactions} Transaksi</p>
-                <p className="text-[9px] text-stone-400 font-semibold leading-none pt-0.5">Berstatus PAID (Lunas)</p>
-              </div>
-            </div>
-
-            {/* 3. AVERAGE ORDER VALUE */}
-            <div className="bg-white border border-stone-100 rounded-3xl p-5 shadow-xs flex items-center gap-4 relative overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/5 rounded-bl-full pointer-events-none transition-all group-hover:scale-105" />
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-750">
-                <FiCreditCard className="w-6 h-6 stroke-[2.5]" />
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Rata-rata Transaksi</p>
-                <p className="text-xl font-black text-stone-900">Rp {averageOrderValue.toLocaleString("id-ID")}</p>
-                <p className="text-[9px] text-stone-400 font-semibold leading-none pt-0.5">Per-pembayaran berhasil</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Graphical Analytics & Breakdown */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Box: Payment Methods Distribution */}
-            <div className="bg-white border border-stone-100 rounded-3xl p-6 shadow-xs space-y-4">
-              <div>
-                <h3 className="font-extrabold text-stone-900 text-xs uppercase tracking-wider">Breakdown Metode Pembayaran</h3>
-                <p className="text-stone-500 text-[11px] mt-0.5">Distribusi omzet berdasarkan jenis layanan pembayaran.</p>
-              </div>
-
-              <div className="space-y-3.5 pt-2">
-                {Object.keys(methodCounts).length > 0 ? (
-                  Object.entries(methodCounts).map(([method, amount]) => {
-                    const percent = totalRevenue > 0 ? Math.round((amount / totalRevenue) * 100) : 0;
-                    return (
-                      <div key={method} className="space-y-1">
-                        <div className="flex justify-between text-xs font-bold text-stone-700">
-                          <span className="uppercase">{method}</span>
-                          <span>Rp {amount.toLocaleString("id-ID")} ({percent}%)</span>
-                        </div>
-                        <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-primary-500 rounded-full transition-all duration-500" 
-                            style={{ width: `${percent}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="py-8 text-center text-stone-400 text-xs font-semibold uppercase tracking-wider select-none">
-                    Belum ada data pembayaran metode.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Box: Dine In vs Take Away Revenue */}
-            <div className="bg-white border border-stone-100 rounded-3xl p-6 shadow-xs space-y-4">
-              <div>
-                <h3 className="font-extrabold text-stone-900 text-xs uppercase tracking-wider">Distribusi Jenis Pesanan</h3>
-                <p className="text-stone-500 text-[11px] mt-0.5">Proporsi pemasukan dari Dine In vs Take Away.</p>
-              </div>
-
-              <div className="space-y-6 pt-2">
-                {/* Dine In Progress */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-stone-700 flex items-center gap-1.5">🍽️ Makan Di Tempat (Dine In)</span>
-                    <span className="font-extrabold text-purple-700">Rp {dineInRevenue.toLocaleString("id-ID")} ({dineInPercent}%)</span>
-                  </div>
-                  <div className="h-3 bg-stone-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-purple-500 rounded-full transition-all duration-500" 
-                      style={{ width: `${dineInPercent}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Take Away Progress */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-stone-700 flex items-center gap-1.5">🥡 Bawa Pulang (Take Away)</span>
-                    <span className="font-extrabold text-orange-700">Rp {takeAwayRevenue.toLocaleString("id-ID")} ({takeAwayPercent}%)</span>
-                  </div>
-                  <div className="h-3 bg-stone-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-orange-500 rounded-full transition-all duration-500" 
-                      style={{ width: `${takeAwayPercent}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Statistics & Analytics Breakdown */}
+          <FinanceStatsCards
+            totalRevenue={totalRevenue}
+            totalTransactions={totalTransactions}
+            averageOrderValue={averageOrderValue}
+            methodCounts={methodCounts}
+            dineInRevenue={dineInRevenue}
+            takeAwayRevenue={takeAwayRevenue}
+            dineInPercent={dineInPercent}
+            takeAwayPercent={takeAwayPercent}
+          />
 
           {/* Filtering Section */}
           <div className="bg-white rounded-2xl border border-stone-100 p-4 flex flex-col lg:flex-row gap-4 items-center justify-between shadow-xs">
@@ -341,17 +218,23 @@ export default function AdminFinancePage() {
               {/* Method Dropdown */}
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold text-stone-400 uppercase select-none">Metode:</span>
-                <select
+                <Select
                   value={methodFilter}
-                  onChange={(e) => setMethodFilter(e.target.value)}
-                  className="h-10 px-3 bg-stone-50 border border-stone-100 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer"
+                  onValueChange={(val) => setMethodFilter(val)}
                 >
-                  <option value="ALL">Semua Metode</option>
-                  <option value="QRIS">QRIS</option>
-                  <option value="BANK_BCA">BANK BCA</option>
-                  <option value="CASH">CASH</option>
-                  <option value="DUMMY">DUMMY</option>
-                </select>
+                  <SelectTrigger 
+                    className="h-10 px-3 bg-stone-50 border border-stone-100 rounded-xl text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500 cursor-pointer flex items-center justify-between gap-1 w-[130px] text-stone-750"
+                  >
+                    <SelectValue placeholder="Metode" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[9999] bg-white border border-stone-150 rounded-xl shadow-md p-1">
+                    <SelectItem value="ALL" className="text-xs font-semibold text-stone-750 focus:bg-stone-50 focus:text-stone-900 rounded-lg py-2 px-3 cursor-pointer">Semua Metode</SelectItem>
+                    <SelectItem value="QRIS" className="text-xs font-semibold text-stone-750 focus:bg-stone-50 focus:text-stone-900 rounded-lg py-2 px-3 cursor-pointer">QRIS</SelectItem>
+                    <SelectItem value="BANK_BCA" className="text-xs font-semibold text-stone-750 focus:bg-stone-50 focus:text-stone-900 rounded-lg py-2 px-3 cursor-pointer">BANK BCA</SelectItem>
+                    <SelectItem value="CASH" className="text-xs font-semibold text-stone-750 focus:bg-stone-50 focus:text-stone-900 rounded-lg py-2 px-3 cursor-pointer">CASH</SelectItem>
+                    <SelectItem value="DUMMY" className="text-xs font-semibold text-stone-750 focus:bg-stone-50 focus:text-stone-900 rounded-lg py-2 px-3 cursor-pointer">DUMMY</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Status Selector Chips */}
@@ -379,158 +262,11 @@ export default function AdminFinancePage() {
           </div>
 
           {/* Main payment list view */}
-          {filteredPayments.length > 0 ? (
-            viewMode === "table" ? (
-              /* 1. TABLE LIST VIEW */
-              <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden shadow-xs">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[950px]">
-                    <thead>
-                      <tr className="bg-stone-50 text-stone-500 border-b border-stone-100 text-xs font-bold uppercase tracking-wider">
-                        <th className="py-4.5 px-6 w-32">ID Pembayaran</th>
-                        <th className="py-4.5 px-6 w-32">ID Pesanan</th>
-                        <th className="py-4.5 px-6">Pelanggan</th>
-                        <th className="py-4.5 px-6 w-32">Jenis Order</th>
-                        <th className="py-4.5 px-6 w-36">Waktu / Tanggal</th>
-                        <th className="py-4.5 px-6 w-32">Metode</th>
-                        <th className="py-4.5 px-6 w-32">Total Harga</th>
-                        <th className="py-4.5 px-6 w-32">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-100 text-xs">
-                      {paginatedPayments.map((p) => {
-                        const isDineIn = p.order?.orderType === "DINE_IN";
-                        const custName = p.order?.user?.name || p.order?.guestName || "Tamu";
-                        const custEmail = p.order?.user?.email || p.order?.guestPhone || "Tanpa akun";
-                        
-                        return (
-                          <tr key={p.id} className="hover:bg-stone-50/40 transition-colors">
-                            {/* Payment ID shortened */}
-                            <td className="py-4.5 px-6 font-mono font-bold text-stone-900">
-                              #{p.id.slice(0, 8)}...
-                            </td>
-
-                            {/* Order ID shortened */}
-                            <td className="py-4.5 px-6 font-mono text-stone-500">
-                              #{p.orderId.slice(0, 8)}...
-                            </td>
-
-                            {/* Customer Profile info */}
-                            <td className="py-4.5 px-6">
-                              <p className="font-bold text-stone-850">{custName}</p>
-                              <p className="text-[10px] text-stone-400 font-medium">{custEmail}</p>
-                            </td>
-
-                            {/* Order Type Badge */}
-                            <td className="py-4.5 px-6">
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border leading-none ${
-                                isDineIn
-                                  ? "bg-purple-50 text-purple-700 border-purple-100"
-                                  : "bg-orange-50 text-orange-700 border-orange-100"
-                              }`}>
-                                {isDineIn ? "🍽️ Dine In" : "🥡 Take Away"}
-                              </span>
-                            </td>
-
-                            {/* Date */}
-                            <td className="py-4.5 px-6 text-stone-550 font-semibold">
-                              {formatDateTime(p.createdAt)}
-                            </td>
-
-                            {/* Payment Method */}
-                            <td className="py-4.5 px-6 font-bold text-stone-600">
-                              <span className="bg-stone-100 px-2 py-1 rounded-md text-[10px] tracking-wide uppercase font-extrabold border border-stone-200">
-                                {p.method}
-                              </span>
-                            </td>
-
-                            {/* Paid Amount */}
-                            <td className="py-4.5 px-6 font-bold text-stone-900 text-sm">
-                              Rp {p.amount.toLocaleString("id-ID")}
-                            </td>
-
-                            {/* Status Badge */}
-                            <td className="py-4.5 px-6">
-                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border leading-none ${
-                                p.status === "PAID"
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-250"
-                                  : "bg-amber-50 text-amber-700 border-amber-250"
-                              }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${p.status === "PAID" ? "bg-emerald-500" : "bg-amber-500"}`} />
-                                {p.status === "PAID" ? "Lunas" : "Menunggu"}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              /* 2. GRID CARDS VIEW */
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {paginatedPayments.map((p) => {
-                  const isDineIn = p.order?.orderType === "DINE_IN";
-                  const custName = p.order?.user?.name || p.order?.guestName || "Tamu";
-                  
-                  return (
-                    <div 
-                      key={p.id} 
-                      className="bg-white border border-stone-100 rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow group"
-                    >
-                      {/* Card Header */}
-                      <div className="flex justify-between items-start gap-2 border-b border-stone-100 pb-3">
-                        <div className="space-y-1">
-                          <p className="text-[10px] text-stone-400 font-bold uppercase leading-none">Pembayaran ID</p>
-                          <p className="text-xs font-mono font-bold text-stone-950 mt-0.5">#{p.id.slice(0, 8)}...</p>
-                        </div>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border leading-none ${
-                          p.status === "PAID"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-250"
-                            : "bg-amber-50 text-amber-700 border-amber-250"
-                        }`}>
-                          {p.status === "PAID" ? "Lunas" : "Menunggu"}
-                        </span>
-                      </div>
-
-                      {/* Card Info details */}
-                      <div className="space-y-2 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-stone-400 font-semibold">Pelanggan:</span>
-                          <span className="font-bold text-stone-850">{custName}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-stone-400 font-semibold">Tipe:</span>
-                          <span className={`font-bold ${isDineIn ? "text-purple-700" : "text-orange-700"}`}>
-                            {isDineIn ? "🍽️ Dine In" : "🥡 Take Away"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-stone-400 font-semibold">Metode:</span>
-                          <span className="font-bold text-stone-600 uppercase">{p.method}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-stone-400 font-semibold">Tanggal:</span>
-                          <span className="font-medium text-stone-600">{formatDateTime(p.createdAt)}</span>
-                        </div>
-                      </div>
-
-                      {/* Card Footer Price */}
-                      <div className="border-t border-stone-100 pt-3 flex justify-between items-center">
-                        <span className="text-[9px] text-stone-400 font-bold uppercase leading-none">Total Bayar</span>
-                        <span className="font-black text-stone-900 text-sm">Rp {p.amount.toLocaleString("id-ID")}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )
-          ) : (
-            <div className="py-16 bg-white border border-stone-200 rounded-3xl text-center text-stone-400 font-bold uppercase tracking-wider text-xs shadow-xs">
-              Tidak ada data pembayaran ditemukan.
-            </div>
-          )}
+          <FinanceTable
+            paginatedPayments={paginatedPayments}
+            viewMode={viewMode}
+            formatDateTime={formatDateTime}
+          />
 
           {/* Pagination bar */}
           {totalPages > 1 && (
@@ -539,9 +275,9 @@ export default function AdminFinancePage() {
                 type="button"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
               >
-                &larr; Sebelumnya
+                &larr; Seb.
               </button>
               <div className="flex items-center gap-1.5">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
@@ -563,9 +299,9 @@ export default function AdminFinancePage() {
                 type="button"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
               >
-                Selanjutnya &rarr;
+                Sel. &rarr;
               </button>
             </div>
           )}

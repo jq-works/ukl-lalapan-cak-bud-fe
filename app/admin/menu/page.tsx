@@ -4,29 +4,14 @@ import React, { useState, useEffect } from "react";
 
 import { useAlert } from "@/context/AlertContext";
 import { api } from "@/lib/api";
-import { FoodImage } from "@/components/ui/FoodImage";
 import { 
-  FiSearch, FiPlus, FiEdit, FiTrash2, 
-  FiAlertCircle, FiFolder, FiCoffee, 
-  FiGrid, FiList, FiImage, FiRefreshCw
+  FiSearch, FiPlus, FiFolder, FiCoffee, 
+  FiGrid, FiList, FiRefreshCw
 } from "react-icons/fi";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CategoryTable } from "@/components/admin/CategoryTable";
+import { CategoryModal } from "@/components/admin/CategoryModal";
+import { MenuItemModal } from "@/components/admin/MenuItemModal";
+import { MenuItemsList } from "@/components/admin/MenuItemsList";
 
 
 
@@ -566,220 +551,30 @@ export default function AdminMenuPage() {
               </div>
 
               {/* Grid / List Layout Content */}
-              {filteredItems.length > 0 ? (
-                viewMode === "grid" ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {paginatedItems.map((item) => (
-                      <div 
-                        key={item.id} 
-                        className={`bg-white border rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between transition-all group ${
-                          item.isAvailable ? "border-stone-100 hover:shadow-md" : "border-stone-150 bg-stone-50/50 opacity-90"
-                        }`}
-                      >
-                        <div>
-                          {/* Food Image Container */}
-                          <div className="relative w-full h-44 bg-stone-100 overflow-hidden">
-                            <FoodImage 
-                              src={item.imageUrl} 
-                              alt={item.name} 
-                              className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-102 ${
-                                !item.isAvailable && "filter grayscale-[40%]"
-                              }`} 
-                            />
-                            {/* Category Badge overlay */}
-                            <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm border border-stone-100 text-stone-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full select-none shadow-sm">
-                              {item.category?.name || "Kategori"}
-                            </span>
-
-                            {/* Availability status badge */}
-                            {!item.isAvailable && (
-                              <span className="absolute inset-0 bg-stone-950/40 backdrop-blur-xs flex items-center justify-center text-white text-xs font-bold uppercase tracking-widest select-none">
-                                Habis
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Text Details */}
-                          <div className="p-5 space-y-2">
-                            <h3 className="font-bold text-stone-850 text-sm leading-tight line-clamp-1">{item.name}</h3>
-                            <p className="text-stone-500 text-xs line-clamp-2 min-h-[2rem]">
-                              {item.description || "Tidak ada deskripsi."}
-                            </p>
-                            <p className="font-bold text-stone-900 text-sm pt-2">
-                              Rp {item.price.toLocaleString("id-ID")}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Footer Actions */}
-                        <div className="px-5 py-4 border-t border-stone-100 bg-stone-50/40 flex items-center justify-between gap-4">
-                          {/* Switch button styling */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-stone-500 font-semibold select-none">
-                              {item.isAvailable ? "Tersedia" : "Habis"}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleToggleAvailability(item)}
-                              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-250 ease-in-out focus:outline-none ${
-                                item.isAvailable ? "bg-primary-500" : "bg-stone-300"
-                              }`}
-                            >
-                              <span
-                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-250 ease-in-out ${
-                                  item.isAvailable ? "translate-x-5" : "translate-x-0"
-                                }`}
-                              />
-                            </button>
-                          </div>
-
-                          {/* Action buttons */}
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openItemForm(item)}
-                              className="p-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg border border-stone-100 transition-colors cursor-pointer"
-                              title="Edit Menu"
-                            >
-                              <FiEdit className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeletingItem(item)}
-                              className="p-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg border border-red-100 transition-all cursor-pointer"
-                              title="Hapus Menu"
-                            >
-                              <FiTrash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  /* TABEL LIST VIEW */
-                  <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden shadow-sm">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse min-w-[700px]">
-                        <thead>
-                          <tr className="bg-stone-50 text-stone-500 border-b border-stone-100 text-xs font-bold uppercase tracking-wider">
-                            <th className="py-4 px-6 w-24">Gambar</th>
-                            <th className="py-4 px-6">Nama Menu</th>
-                            <th className="py-4 px-6">Kategori</th>
-                            <th className="py-4 px-6 w-36">Harga</th>
-                            <th className="py-4 px-6 w-36">Ketersediaan</th>
-                            <th className="py-4 px-6 text-right w-36">Aksi</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-stone-100 text-xs">
-                          {paginatedItems.map((item) => (
-                            <tr key={item.id} className="hover:bg-stone-50/50 transition-colors">
-                              {/* Image */}
-                              <td className="py-3.5 px-6">
-                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-stone-100 border border-stone-100">
-                                  <FoodImage 
-                                    src={item.imageUrl} 
-                                    alt={item.name} 
-                                    className="w-full h-full object-cover" 
-                                  />
-                                </div>
-                              </td>
-
-                              {/* Name & Desc */}
-                              <td className="py-3.5 px-6">
-                                <p className="font-bold text-stone-850 text-sm">{item.name}</p>
-                                <p className="text-[11px] text-stone-500 line-clamp-1 mt-0.5 max-w-[280px]">
-                                  {item.description || "Tidak ada deskripsi."}
-                                </p>
-                              </td>
-
-                              {/* Category */}
-                              <td className="py-3.5 px-6">
-                                <span className="inline-flex items-center px-2.5 py-1 bg-stone-50 text-stone-700 border border-stone-100 rounded-lg text-[10px] font-bold">
-                                  {item.category?.name || "Kategori"}
-                                </span>
-                              </td>
-
-                              {/* Price */}
-                              <td className="py-3.5 px-6 font-bold text-stone-900 text-sm">
-                                Rp {item.price.toLocaleString("id-ID")}
-                              </td>
-
-                              {/* Availability */}
-                              <td className="py-3.5 px-6">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] text-stone-500 font-semibold select-none">
-                                    {item.isAvailable ? "Tersedia" : "Habis"}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleAvailability(item)}
-                                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-250 ease-in-out focus:outline-none ${
-                                      item.isAvailable ? "bg-primary-500" : "bg-stone-300"
-                                    }`}
-                                  >
-                                    <span
-                                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-250 ease-in-out ${
-                                        item.isAvailable ? "translate-x-5" : "translate-x-0"
-                                      }`}
-                                    />
-                                  </button>
-                                </div>
-                              </td>
-
-                              {/* Actions */}
-                              <td className="py-3.5 px-6 text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => openItemForm(item)}
-                                    className="p-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg border border-stone-100 transition-colors cursor-pointer"
-                                    title="Edit Menu"
-                                  >
-                                    <FiEdit className="w-3.5 h-3.5" />
-                                  </button>
-                                  
-                                  <button
-                                    type="button"
-                                    onClick={() => setDeletingItem(item)}
-                                    className="p-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg border border-red-100 transition-all cursor-pointer"
-                                    title="Hapus Menu"
-                                  >
-                                    <FiTrash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )
-              ) : (
-                <div className="py-16 bg-white border border-stone-200 rounded-3xl text-center text-stone-400 font-bold uppercase tracking-wider text-xs">
-                  Tidak ada menu ditemukan.
-                </div>
-              )}
+              <MenuItemsList
+                items={paginatedItems}
+                viewMode={viewMode}
+                handleToggleAvailability={handleToggleAvailability}
+                openItemForm={openItemForm}
+                setDeletingItem={setDeletingItem}
+              />
 
               {/* Pagination Controls */}
               {totalItemPages > 1 && (
                 <div className="flex items-center justify-between border-t border-stone-150 pt-5 mt-4 bg-white rounded-2xl p-4 border border-stone-100 shadow-sm animate-fade-in select-none">
                   <button
-                    type="button"
-                    onClick={() => setItemPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() => setItemPage(p => Math.max(1, p - 1))}
                     disabled={itemPage === 1}
-                    className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5"
+                    className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
                   >
-                    &larr; Sebelumnya
+                    &larr; Seb.
                   </button>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     {Array.from({ length: totalItemPages }, (_, i) => i + 1).map(page => (
                       <button
                         key={page}
-                        type="button"
                         onClick={() => setItemPage(page)}
-                        className={`w-9 h-9 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                        className={`w-9 h-9 text-xs font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
                           itemPage === page
                             ? "bg-primary-500 border-primary-500 text-white shadow-sm"
                             : "bg-white border-stone-200 text-stone-500 hover:bg-stone-50"
@@ -790,12 +585,11 @@ export default function AdminMenuPage() {
                     ))}
                   </div>
                   <button
-                    type="button"
-                    onClick={() => setItemPage(prev => Math.min(prev + 1, totalItemPages))}
+                    onClick={() => setItemPage(p => Math.min(totalItemPages, p + 1))}
                     disabled={itemPage === totalItemPages}
-                    className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5"
+                    className="px-4 py-2 border border-stone-200 hover:bg-stone-50 rounded-xl text-xs font-bold text-stone-600 disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
                   >
-                    Selanjutnya &rarr;
+                    Sel. &rarr;
                   </button>
                 </div>
               )}
@@ -804,370 +598,54 @@ export default function AdminMenuPage() {
 
           {/* TAB 2: KELOLA KATEGORI */}
           {activeTab === "categories" && (
-            <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-stone-50 text-stone-500 border-b border-stone-100 text-xs font-bold uppercase tracking-wider">
-                      <th className="py-5 px-6">Nama Kategori</th>
-                      <th className="py-5 px-6 w-56">Jumlah Item Menu</th>
-                      <th className="py-5 px-6 text-right w-48">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100 text-xs">
-                    {categories.length > 0 ? (
-                      categories.map((cat) => {
-                        const count = menuItems.filter(m => m.categoryId === cat.id).length;
-
-                        return (
-                          <tr key={cat.id} className="hover:bg-stone-50/50 transition-colors">
-                            <td className="py-4 px-6 font-bold text-stone-850 text-sm">
-                              {cat.name}
-                            </td>
-                            <td className="py-4 px-6 text-stone-500 font-semibold">
-                              {count} Menu
-                            </td>
-                            <td className="py-4 px-6 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={() => openCategoryForm(cat)}
-                                  className="p-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg border border-stone-100 transition-colors cursor-pointer"
-                                  title="Ubah Kategori"
-                                >
-                                  <FiEdit className="w-3.5 h-3.5" />
-                                </button>
-                                
-                                <button
-                                  onClick={() => setDeletingCategory(cat)}
-                                  className="p-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg border border-red-100 transition-all cursor-pointer"
-                                  title="Hapus Kategori"
-                                >
-                                  <FiTrash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <tr>
-                        <td colSpan={3} className="py-12 text-center text-stone-400 font-semibold">
-                          Belum ada kategori terdaftar.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <CategoryTable
+              categories={categories}
+              menuItems={menuItems}
+              openCategoryForm={openCategoryForm}
+              setDeletingCategory={setDeletingCategory}
+            />
           )}
         </>
       )}
 
-      {/* DIALOG 1: FORM MENU MODAL (ADD / EDIT) */}
-      <AlertDialog open={isItemModalOpen} onOpenChange={setIsItemModalOpen}>
-        <AlertDialogContent className="sm:max-w-lg">
-          <form onSubmit={handleItemSubmit}>
-            <AlertDialogHeader className="border-b border-stone-100 flex flex-row items-center justify-between p-6 py-5">
-              <AlertDialogTitle className="font-bold text-stone-900 text-base">
-                {editingItem ? "Ubah Data Menu" : "Tambah Menu Baru"}
-              </AlertDialogTitle>
-              <button 
-                type="button"
-                onClick={() => setIsItemModalOpen(false)}
-                className="text-stone-400 hover:text-stone-600 text-sm font-semibold cursor-pointer"
-              >
-                ✕
-              </button>
-            </AlertDialogHeader>
+      {/* DIALOGS & CONFIRMATIONS */}
+      <MenuItemModal
+        isItemModalOpen={isItemModalOpen}
+        setIsItemModalOpen={setIsItemModalOpen}
+        editingItem={editingItem}
+        itemFormName={itemFormName}
+        setItemFormName={setItemFormName}
+        itemFormPrice={itemFormPrice}
+        setItemFormPrice={setItemFormPrice}
+        itemFormCategoryId={itemFormCategoryId}
+        setItemFormCategoryId={setItemFormCategoryId}
+        itemFormDescription={itemFormDescription}
+        setItemFormDescription={setItemFormDescription}
+        itemFormImageUrl={itemFormImageUrl}
+        setItemFormImageUrl={setItemFormImageUrl}
+        itemFormIsAvailable={itemFormIsAvailable}
+        setItemFormIsAvailable={setItemFormIsAvailable}
+        itemFormError={itemFormError}
+        setItemFormError={setItemFormError}
+        categories={categories}
+        handleItemSubmit={handleItemSubmit}
+        deletingItem={deletingItem}
+        setDeletingItem={setDeletingItem}
+        handleDeleteItem={handleDeleteItem}
+      />
 
-            <div className="p-6 space-y-4">
-              {itemFormError && (
-                <div className="p-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-xs font-semibold flex items-center gap-2">
-                  <FiAlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{itemFormError}</span>
-                </div>
-              )}
-
-              {/* Item Name */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Nama Menu *</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Lalapan Lele Bakar Cak Bud"
-                  value={itemFormName}
-                  onChange={(e) => setItemFormName(e.target.value)}
-                  className="w-full h-11 px-4 bg-stone-50 border border-stone-100 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Price */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Harga Menu (Rp) *</label>
-                  <input
-                    type="number"
-                    placeholder="Contoh: 18000"
-                    value={itemFormPrice}
-                    onChange={(e) => setItemFormPrice(e.target.value)}
-                    className="w-full h-11 px-4 bg-stone-50 border border-stone-100 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                    required
-                  />
-                </div>
-
-                {/* Category ID */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Kategori *</label>
-                  <Select
-                    value={itemFormCategoryId}
-                    onValueChange={(val) => setItemFormCategoryId(val)}
-                  >
-                    <SelectTrigger 
-                      className="w-full !h-11 px-4 bg-stone-50 border border-stone-100 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all flex items-center justify-between text-stone-750"
-                    >
-                      <SelectValue placeholder="Pilih Kategori" />
-                    </SelectTrigger>
-                    <SelectContent className="z-[9999] bg-white border border-stone-150 rounded-xl shadow-md p-1">
-                      {categories.map(c => (
-                        <SelectItem 
-                          key={c.id} 
-                          value={c.id}
-                          className="text-xs font-semibold text-stone-750 focus:bg-stone-50 focus:text-stone-900 rounded-lg py-2.5 px-3 cursor-pointer"
-                        >
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Deskripsi Lengkap</label>
-                <textarea
-                  placeholder="Tuliskan isian lalapan, bumbu, level pedas sambal..."
-                  value={itemFormDescription}
-                  onChange={(e) => setItemFormDescription(e.target.value)}
-                  className="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all min-h-[70px] resize-none"
-                />
-              </div>
-
-              {/* Image Upload Selection */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Gambar Menu</label>
-                
-                {/* Image Preview if available */}
-                {itemFormImageUrl ? (
-                  <div className="flex items-center gap-4 p-3 bg-stone-50 border border-stone-100 rounded-xl">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-stone-100 border border-stone-200/50 flex-shrink-0 flex items-center justify-center">
-                      <img 
-                        src={itemFormImageUrl} 
-                        alt="Pratinjau Gambar" 
-                        className="w-full h-full object-cover"
-                        onError={() => {
-                          // Handle broken image
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-stone-700 font-bold truncate">
-                        {itemFormImageUrl.startsWith("data:") ? "Gambar Lokal Terunggah" : itemFormImageUrl}
-                      </p>
-                      <p className="text-[9px] text-stone-400 font-semibold mt-0.5 uppercase tracking-wider">
-                        {itemFormImageUrl.startsWith("data:") ? "Format Base64 Data URL" : "Format Web Link"}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setItemFormImageUrl("")}
-                        className="text-[10px] text-red-600 font-bold hover:text-red-700 mt-1 cursor-pointer"
-                      >
-                        Hapus Gambar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full">
-                    {/* Local Laptop Upload Option */}
-                    <label className="border-2 border-dashed border-stone-200 hover:border-primary-500 hover:bg-stone-50/30 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all text-center">
-                      <FiImage className="w-8 h-8 text-stone-400 mb-1.5" />
-                      <span className="text-[11px] font-bold text-stone-700">Unggah dari Laptop</span>
-                      <span className="text-[9px] text-stone-400 mt-0.5">Maks. 2MB (PNG/JPG)</span>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          
-                          if (file.size > 2 * 1024 * 1024) {
-                            setItemFormError("Ukuran gambar terlalu besar (maksimal 2MB)");
-                            return;
-                          }
- 
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            if (typeof reader.result === "string") {
-                              setItemFormImageUrl(reader.result);
-                            }
-                          };
-                          reader.onerror = () => {
-                            setItemFormError("Gagal membaca file gambar");
-                          };
-                          reader.readAsDataURL(file);
-                        }} 
-                      />
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              {/* Availability */}
-              <div className="flex items-center justify-between p-4 bg-stone-50 rounded-xl border border-stone-100/50">
-                <div>
-                  <span className="text-xs font-bold text-stone-850">Status Ketersediaan</span>
-                  <p className="text-[10px] text-stone-400 font-medium">Bisa diganti dengan cepat di kartu menu.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setItemFormIsAvailable(!itemFormIsAvailable)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-250 ease-in-out focus:outline-none ${
-                    itemFormIsAvailable ? "bg-primary-500" : "bg-stone-300"
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-250 ease-in-out ${
-                      itemFormIsAvailable ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            <AlertDialogFooter>
-              <button
-                type="button"
-                onClick={() => setIsItemModalOpen(false)}
-                className="inline-flex h-9 items-center justify-center rounded-xl border border-stone-200 bg-white px-5 text-xs font-semibold text-stone-700 hover:bg-stone-50 active:scale-95 transition-all cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="inline-flex h-9 items-center justify-center rounded-xl bg-primary-500 px-5 text-xs font-bold text-white shadow-md shadow-green-200/50 hover:bg-primary-600 active:scale-95 transition-all cursor-pointer"
-              >
-                Simpan Menu
-              </button>
-            </AlertDialogFooter>
-          </form>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* DIALOG 2: FORM KATEGORI MODAL (ADD / EDIT) */}
-      <AlertDialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
-        <AlertDialogContent className="sm:max-w-sm">
-          <form onSubmit={handleCategorySubmit}>
-            <AlertDialogHeader className="border-b border-stone-100 flex flex-row items-center justify-between p-6 py-5">
-              <AlertDialogTitle className="font-bold text-stone-900 text-base">
-                {editingCategory ? "Ubah Nama Kategori" : "Tambah Kategori Baru"}
-              </AlertDialogTitle>
-              <button 
-                type="button"
-                onClick={() => setIsCategoryModalOpen(false)}
-                className="text-stone-400 hover:text-stone-650 text-sm font-semibold cursor-pointer"
-              >
-                ✕
-              </button>
-            </AlertDialogHeader>
-
-            <div className="p-6 space-y-4">
-              {categoryFormError && (
-                <div className="p-3 bg-red-50 text-red-605 border border-red-100 rounded-xl text-xs font-semibold flex items-center gap-2">
-                  <FiAlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{categoryFormError}</span>
-                </div>
-              )}
-
-              {/* Name */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Nama Kategori *</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Lalapan, Penyet, Cemilan..."
-                  value={categoryFormName}
-                  onChange={(e) => setCategoryFormName(e.target.value)}
-                  className="w-full h-11 px-4 bg-stone-50 border border-stone-100 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                  required
-                />
-              </div>
-            </div>
-
-            <AlertDialogFooter>
-              <button
-                type="button"
-                onClick={() => setIsCategoryModalOpen(false)}
-                className="inline-flex h-9 items-center justify-center rounded-xl border border-stone-200 bg-white px-5 text-xs font-semibold text-stone-700 hover:bg-stone-50 active:scale-95 transition-all cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="inline-flex h-9 items-center justify-center rounded-xl bg-primary-500 px-5 text-xs font-bold text-white shadow-md shadow-green-200/50 hover:bg-primary-600 active:scale-95 transition-all cursor-pointer"
-              >
-                Simpan Kategori
-              </button>
-            </AlertDialogFooter>
-          </form>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* ALERT DIALOG 1: HAPUS MENU CONFIRMATION */}
-      <AlertDialog open={!!deletingItem} onOpenChange={(open) => { if (!open) setDeletingItem(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Menu</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus <span className="font-bold text-stone-900">{deletingItem?.name}</span> dari daftar menu? Aksi ini permanen dan tidak dapat dibatalkan.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer">Batal</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteItem} 
-              className="bg-red-650 hover:bg-red-700 shadow-none text-white cursor-pointer"
-            >
-              Ya, Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* ALERT DIALOG 2: HAPUS KATEGORI CONFIRMATION */}
-      <AlertDialog open={!!deletingCategory} onOpenChange={(open) => { if (!open) setDeletingCategory(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Kategori Menu</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus kategori <span className="font-bold text-stone-900">{deletingCategory?.name}</span>? 
-              <br /><br />
-              <span className="text-red-600 font-semibold block bg-red-50 p-3 rounded-xl border border-red-100 text-xs">
-                ⚠️ PERHATIAN: Semua menu yang termasuk dalam kategori ini akan secara otomatis kehilangan kategori / dipindahkan.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer">Batal</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteCategory} 
-              className="bg-red-650 hover:bg-red-700 shadow-none text-white cursor-pointer"
-            >
-              Ya, Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <CategoryModal
+        isCategoryModalOpen={isCategoryModalOpen}
+        setIsCategoryModalOpen={setIsCategoryModalOpen}
+        editingCategory={editingCategory}
+        categoryFormName={categoryFormName}
+        setCategoryFormName={setCategoryFormName}
+        categoryFormError={categoryFormError}
+        handleCategorySubmit={handleCategorySubmit}
+        deletingCategory={deletingCategory}
+        setDeletingCategory={setDeletingCategory}
+        handleDeleteCategory={handleDeleteCategory}
+      />
     </div>
   );
 }
