@@ -43,6 +43,15 @@
   --color-stone-800: #292524;
   --color-stone-850: #1c1917;
   --color-stone-900: #0f0c0b;
+  --color-stone-550: #6b6661;
+  --color-red-650: #be123c;
+  --color-red-655: #be123c;
+  --color-red-605: #dc2626;
+  --color-red-55: #fef2f2;
+
+  /* ── Custom Spacings ──────────────────────────── */
+  --spacing-4\.5: 1.125rem;
+  --spacing-5\.5: 1.375rem;
 
   /* ── Radii ────────────────────────────────────── */
   --radius-lg: 1rem;

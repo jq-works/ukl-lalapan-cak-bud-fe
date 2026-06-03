@@ -64,7 +64,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
       <CustomerNavbar />
       
-      <main className="max-w-md w-full mx-auto px-4 pt-10 pb-32 flex-grow flex flex-col justify-center">
+      <main className="max-w-md w-full mx-auto px-4 pt-10 pb-32 grow flex flex-col justify-center">
         <div className="fade-in space-y-6 w-full">
           
           {/* Logo and Brand */}

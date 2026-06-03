@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
+
 import { useAlert } from "@/context/AlertContext";
 import { api } from "@/lib/api";
 import { FoodImage } from "@/components/ui/FoodImage";
-import { FOOD_ITEMS, CATEGORIES, FoodItem } from "@/lib/data";
 import { 
   FiSearch, FiPlus, FiEdit, FiTrash2, 
-  FiAlertCircle, FiCheck, FiFolder, FiCoffee, 
+  FiAlertCircle, FiFolder, FiCoffee, 
   FiGrid, FiList, FiImage, FiRefreshCw
 } from "react-icons/fi";
 import {
@@ -21,6 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 
 
@@ -41,15 +47,14 @@ interface ApiMenuItem {
 }
 
 export default function AdminMenuPage() {
-  const { token } = useAuth();
   const { showAlert } = useAlert();
   
-  // Tabs state: "items" (Kelola Makanan) or "categories" (Kelola Kategori)
+  // Tabs state: "items" (Kelola Menu) or "categories" (Kelola Kategori)
   const [activeTab, setActiveTab] = useState<"items" | "categories">("items");
   
   // Connection state
   const [isLoading, setIsLoading] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null);
+
 
   // Main Data lists
   const [menuItems, setMenuItems] = useState<ApiMenuItem[]>([]);
@@ -83,20 +88,8 @@ export default function AdminMenuPage() {
   const [categoryFormError, setCategoryFormError] = useState<string | null>(null);
 
   // Load Initial Data
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  const [itemPage, setItemPage] = useState(1);
-  const itemsPerPage = 6;
-
-  useEffect(() => {
-    setItemPage(1);
-  }, [searchQuery, selectedCategoryFilter]);
-
   const fetchInitialData = async () => {
     setIsLoading(true);
-    setApiError(null);
     try {
       // 1. Fetch Categories
       const catRes = await api.get("/categories");
@@ -105,26 +98,37 @@ export default function AdminMenuPage() {
         throw new Error(catData.message || "Gagal mengambil data kategori");
       }
       const loadedCategories: ApiCategory[] = catData.data || [];
-
+ 
       // 2. Fetch Menu Items
       const menuRes = await api.get("/menu-items");
       const menuData = menuRes.data;
       if (menuData.success === false) {
-        throw new Error(menuData.message || "Gagal mengambil data menu makanan");
+        throw new Error(menuData.message || "Gagal mengambil data menu");
       }
       const loadedMenuItems: ApiMenuItem[] = menuData.data || [];
-
+ 
       setCategories(loadedCategories);
       setMenuItems(loadedMenuItems);
     } catch (err: any) {
       const errMsg = err.response?.data?.message || err.message;
       console.error("Connection to production API failed:", errMsg);
-      setApiError(errMsg || "Gagal memuat data dari server.");
       showAlert("Gagal memuat data dari server: " + errMsg, "Kesalahan Koneksi Server");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [itemPage, setItemPage] = useState(1);
+  const itemsPerPage = 6;
+
+  useEffect(() => {
+    setItemPage(1);
+  }, [searchQuery, selectedCategoryFilter]);
 
 
 
@@ -202,16 +206,16 @@ export default function AdminMenuPage() {
 
     // Basic Validation
     if (!itemFormName.trim()) {
-      setItemFormError("Nama makanan wajib diisi");
+      setItemFormError("Nama menu wajib diisi");
       return;
     }
     const priceNum = parseFloat(itemFormPrice);
     if (isNaN(priceNum) || priceNum < 0) {
-      setItemFormError("Harga makanan harus berupa angka valid dan minimal 0");
+      setItemFormError("Harga menu harus berupa angka valid dan minimal 0");
       return;
     }
     if (!itemFormCategoryId) {
-      setItemFormError("Pilih kategori makanan");
+      setItemFormError("Pilih kategori menu");
       return;
     }
 
@@ -439,7 +443,7 @@ export default function AdminMenuPage() {
             }`}
           >
             <FiCoffee className="w-3.5 h-3.5" />
-            Daftar Makanan
+            Daftar Menu
           </button>
           <button
             onClick={() => setActiveTab("categories")}
@@ -461,7 +465,7 @@ export default function AdminMenuPage() {
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl text-xs shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
           >
             <FiPlus className="w-4 h-4 stroke-[3]" />
-            Tambah Makanan Baru
+            Tambah Menu Baru
           </button>
         ) : (
           <button
@@ -482,7 +486,7 @@ export default function AdminMenuPage() {
         </div>
       ) : (
         <>
-          {/* TAB 1: KELOLA MAKANAN */}
+          {/* TAB 1: KELOLA MENU */}
           {activeTab === "items" && (
             <div className="space-y-6">
               {/* Filters */}
@@ -492,7 +496,7 @@ export default function AdminMenuPage() {
                   <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Cari nama makanan atau deskripsi..."
+                    placeholder="Cari nama menu atau deskripsi..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full h-10 pl-10 pr-4 bg-stone-50 border border-stone-100 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
@@ -639,11 +643,10 @@ export default function AdminMenuPage() {
                             >
                               <FiEdit className="w-3.5 h-3.5" />
                             </button>
-                            
                             <button
                               type="button"
                               onClick={() => setDeletingItem(item)}
-                              className="p-2 bg-red-55/10 hover:bg-red-600 text-red-600 hover:text-white rounded-lg border border-red-100 transition-all cursor-pointer"
+                              className="p-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg border border-red-100 transition-all cursor-pointer"
                               title="Hapus Menu"
                             >
                               <FiTrash2 className="w-3.5 h-3.5" />
@@ -661,7 +664,7 @@ export default function AdminMenuPage() {
                         <thead>
                           <tr className="bg-stone-50 text-stone-500 border-b border-stone-100 text-xs font-bold uppercase tracking-wider">
                             <th className="py-4 px-6 w-24">Gambar</th>
-                            <th className="py-4 px-6">Nama Makanan</th>
+                            <th className="py-4 px-6">Nama Menu</th>
                             <th className="py-4 px-6">Kategori</th>
                             <th className="py-4 px-6 w-36">Harga</th>
                             <th className="py-4 px-6 w-36">Ketersediaan</th>
@@ -739,7 +742,7 @@ export default function AdminMenuPage() {
                                   <button
                                     type="button"
                                     onClick={() => setDeletingItem(item)}
-                                    className="p-2 bg-red-55/10 hover:bg-red-600 text-red-600 hover:text-white rounded-lg border border-red-100 transition-all cursor-pointer"
+                                    className="p-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg border border-red-100 transition-all cursor-pointer"
                                     title="Hapus Menu"
                                   >
                                     <FiTrash2 className="w-3.5 h-3.5" />
@@ -755,7 +758,7 @@ export default function AdminMenuPage() {
                 )
               ) : (
                 <div className="py-16 bg-white border border-stone-200 rounded-3xl text-center text-stone-400 font-bold uppercase tracking-wider text-xs">
-                  Tidak ada menu makanan ditemukan.
+                  Tidak ada menu ditemukan.
                 </div>
               )}
 
@@ -822,7 +825,7 @@ export default function AdminMenuPage() {
                               {cat.name}
                             </td>
                             <td className="py-4 px-6 text-stone-500 font-semibold">
-                              {count} Menu Makanan
+                              {count} Menu
                             </td>
                             <td className="py-4 px-6 text-right">
                               <div className="flex items-center justify-end gap-2">
@@ -836,7 +839,7 @@ export default function AdminMenuPage() {
                                 
                                 <button
                                   onClick={() => setDeletingCategory(cat)}
-                                  className="p-2 bg-red-55/10 hover:bg-red-600 text-red-600 hover:text-white rounded-lg border border-red-100 transition-all cursor-pointer"
+                                  className="p-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg border border-red-100 transition-all cursor-pointer"
                                   title="Hapus Kategori"
                                 >
                                   <FiTrash2 className="w-3.5 h-3.5" />
@@ -861,13 +864,13 @@ export default function AdminMenuPage() {
         </>
       )}
 
-      {/* DIALOG 1: FORM MAKANAN MODAL (ADD / EDIT) */}
+      {/* DIALOG 1: FORM MENU MODAL (ADD / EDIT) */}
       <AlertDialog open={isItemModalOpen} onOpenChange={setIsItemModalOpen}>
         <AlertDialogContent className="sm:max-w-lg">
           <form onSubmit={handleItemSubmit}>
             <AlertDialogHeader className="border-b border-stone-100 flex flex-row items-center justify-between p-6 py-5">
               <AlertDialogTitle className="font-bold text-stone-900 text-base">
-                {editingItem ? "Ubah Data Makanan" : "Tambah Makanan Baru"}
+                {editingItem ? "Ubah Data Menu" : "Tambah Menu Baru"}
               </AlertDialogTitle>
               <button 
                 type="button"
@@ -880,7 +883,7 @@ export default function AdminMenuPage() {
 
             <div className="p-6 space-y-4">
               {itemFormError && (
-                <div className="p-3 bg-red-50 text-red-650 border border-red-100 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <div className="p-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-xs font-semibold flex items-center gap-2">
                   <FiAlertCircle className="w-4 h-4 shrink-0" />
                   <span>{itemFormError}</span>
                 </div>
@@ -888,7 +891,7 @@ export default function AdminMenuPage() {
 
               {/* Item Name */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Nama Makanan *</label>
+                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Nama Menu *</label>
                 <input
                   type="text"
                   placeholder="Contoh: Lalapan Lele Bakar Cak Bud"
@@ -902,7 +905,7 @@ export default function AdminMenuPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Price */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Harga Makanan (Rp) *</label>
+                  <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Harga Menu (Rp) *</label>
                   <input
                     type="number"
                     placeholder="Contoh: 18000"
@@ -916,17 +919,27 @@ export default function AdminMenuPage() {
                 {/* Category ID */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Kategori *</label>
-                  <select
+                  <Select
                     value={itemFormCategoryId}
-                    onChange={(e) => setItemFormCategoryId(e.target.value)}
-                    className="w-full h-11 px-4 bg-stone-50 border border-stone-100 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                    required
+                    onValueChange={(val) => setItemFormCategoryId(val)}
                   >
-                    <option value="" disabled>Pilih Kategori</option>
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger 
+                      className="w-full !h-11 px-4 bg-stone-50 border border-stone-100 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all flex items-center justify-between text-stone-750"
+                    >
+                      <SelectValue placeholder="Pilih Kategori" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[9999] bg-white border border-stone-150 rounded-xl shadow-md p-1">
+                      {categories.map(c => (
+                        <SelectItem 
+                          key={c.id} 
+                          value={c.id}
+                          className="text-xs font-semibold text-stone-750 focus:bg-stone-50 focus:text-stone-900 rounded-lg py-2.5 px-3 cursor-pointer"
+                        >
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -943,7 +956,7 @@ export default function AdminMenuPage() {
 
               {/* Image Upload Selection */}
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Gambar Makanan</label>
+                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">Gambar Menu</label>
                 
                 {/* Image Preview if available */}
                 {itemFormImageUrl ? (
@@ -975,10 +988,10 @@ export default function AdminMenuPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="w-full">
                     {/* Local Laptop Upload Option */}
-                    <label className="border-2 border-dashed border-stone-200 hover:border-primary-500 hover:bg-stone-50/30 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all text-center">
-                      <FiImage className="w-6 h-6 text-stone-400 mb-1" />
+                    <label className="border-2 border-dashed border-stone-200 hover:border-primary-500 hover:bg-stone-50/30 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all text-center">
+                      <FiImage className="w-8 h-8 text-stone-400 mb-1.5" />
                       <span className="text-[11px] font-bold text-stone-700">Unggah dari Laptop</span>
                       <span className="text-[9px] text-stone-400 mt-0.5">Maks. 2MB (PNG/JPG)</span>
                       <input 
@@ -993,7 +1006,7 @@ export default function AdminMenuPage() {
                             setItemFormError("Ukuran gambar terlalu besar (maksimal 2MB)");
                             return;
                           }
-
+ 
                           const reader = new FileReader();
                           reader.onloadend = () => {
                             if (typeof reader.result === "string") {
@@ -1007,18 +1020,6 @@ export default function AdminMenuPage() {
                         }} 
                       />
                     </label>
-
-                    {/* Internet URL Option */}
-                    <div className="border border-stone-100 bg-stone-50/50 rounded-xl p-4 flex flex-col justify-center">
-                      <span className="text-[10px] font-bold text-stone-600 block mb-1">Gunakan Link Internet:</span>
-                      <input
-                        type="url"
-                        placeholder="https://images.unsplash.com/..."
-                        value={itemFormImageUrl}
-                        onChange={(e) => setItemFormImageUrl(e.target.value)}
-                        className="w-full h-8 px-2 bg-white border border-stone-200 rounded-lg text-[10px] font-semibold focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-transparent transition-all"
-                      />
-                    </div>
                   </div>
                 )}
               </div>
@@ -1057,7 +1058,7 @@ export default function AdminMenuPage() {
                 type="submit"
                 className="inline-flex h-9 items-center justify-center rounded-xl bg-primary-500 px-5 text-xs font-bold text-white shadow-md shadow-green-200/50 hover:bg-primary-600 active:scale-95 transition-all cursor-pointer"
               >
-                Simpan Makanan
+                Simpan Menu
               </button>
             </AlertDialogFooter>
           </form>
@@ -1126,7 +1127,7 @@ export default function AdminMenuPage() {
       <AlertDialog open={!!deletingItem} onOpenChange={(open) => { if (!open) setDeletingItem(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Menu Makanan</AlertDialogTitle>
+            <AlertDialogTitle>Hapus Menu</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin menghapus <span className="font-bold text-stone-900">{deletingItem?.name}</span> dari daftar menu? Aksi ini permanen dan tidak dapat dibatalkan.
             </AlertDialogDescription>
@@ -1152,7 +1153,7 @@ export default function AdminMenuPage() {
               Apakah Anda yakin ingin menghapus kategori <span className="font-bold text-stone-900">{deletingCategory?.name}</span>? 
               <br /><br />
               <span className="text-red-600 font-semibold block bg-red-50 p-3 rounded-xl border border-red-100 text-xs">
-                ⚠️ PERHATIAN: Semua makanan yang termasuk dalam kategori ini akan secara otomatis kehilangan kategori / dipindahkan.
+                ⚠️ PERHATIAN: Semua menu yang termasuk dalam kategori ini akan secara otomatis kehilangan kategori / dipindahkan.
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -229,7 +229,7 @@ export default function AdminOrdersPage() {
                       </td>
 
                       {/* Date */}
-                      <td className="py-5 px-6 text-stone-550 font-semibold">{order.date}</td>
+                      <td className="py-5 px-6 text-stone-500 font-semibold">{order.date}</td>
 
                       {/* Total */}
                       <td className="py-5 px-6 font-bold text-stone-850">Rp {order.total.toLocaleString("id-ID")}</td>
@@ -255,7 +255,7 @@ export default function AdminOrdersPage() {
                               </button>
                               <button
                                 onClick={() => handleUpdateStatus(order.id, "CANCELLED")}
-                                className="px-2.5 py-1.5 bg-red-55/10 hover:bg-red-100 text-red-655 text-[10px] font-semibold uppercase tracking-wider rounded-lg border border-red-200 transition-all active:scale-95 cursor-pointer"
+                                className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-semibold uppercase tracking-wider rounded-lg border border-red-200 transition-all active:scale-95 cursor-pointer"
                               >
                                 Tolak
                               </button>
@@ -462,7 +462,7 @@ export default function AdminOrdersPage() {
                         <>
                           <button
                             onClick={() => handleUpdateStatus(order.id, "CANCELLED")}
-                            className="w-full py-2.5 bg-red-55/10 hover:bg-red-600 text-red-605 hover:text-white border border-red-100 hover:border-red-600 rounded-xl text-[10px] font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer"
+                            className="w-full py-2.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-100 hover:border-red-600 rounded-xl text-[10px] font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer"
                             title="Tolak pesanan masuk"
                           >
                             <FiX className="w-3.5 h-3.5 stroke-[3]" />
@@ -492,7 +492,7 @@ export default function AdminOrdersPage() {
                         <>
                           <button
                             onClick={() => handleUpdateStatus(order.id, "CANCELLED")}
-                            className="w-full py-2.5 bg-red-55/10 hover:bg-red-600 text-red-650 hover:text-white border border-red-100 hover:border-red-600 rounded-xl text-[10px] font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer"
+                            className="w-full py-2.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-100 hover:border-red-600 rounded-xl text-[10px] font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer"
                             title="Batalkan proses masak"
                           >
                             <FiX className="w-3.5 h-3.5 stroke-[3]" />
@@ -523,7 +523,7 @@ export default function AdminOrdersPage() {
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <button
-                                className="w-full py-2.5 bg-red-55/10 hover:bg-red-600 text-red-600 hover:text-white border border-red-100 rounded-xl text-[10px] font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                                className="w-full py-2.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-100 rounded-xl text-[10px] font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                 title="Hapus Dari Antrean"
                               >
                                 <FiTrash2 className="w-3.5 h-3.5" />

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { 
   FiSearch, FiStar, FiMessageSquare, FiTrash2, 
-  FiAlertCircle, FiCheckCircle, FiRefreshCw, FiArrowLeft,
+  FiAlertCircle, FiRefreshCw, FiArrowLeft,
   FiArrowRight, FiSmile
 } from "react-icons/fi";
 import {
@@ -16,7 +16,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 interface Review {

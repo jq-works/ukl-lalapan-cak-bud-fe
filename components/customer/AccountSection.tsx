@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, MapPin, Award, ShieldAlert, LogOut, ChevronRight, Gift, Lock } from "lucide-react";
+import { User, Award, ShieldAlert, LogOut, ChevronRight, Lock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "@/context/AlertContext";
 import {

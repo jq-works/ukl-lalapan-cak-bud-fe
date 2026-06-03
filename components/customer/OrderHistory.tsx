@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ClipboardList, Copy, Check, RefreshCw, Phone, Search, AlertCircle, Clock, ChefHat, CheckCircle2, Flame } from "lucide-react";
+import { ClipboardList, Copy, Check, RefreshCw, Search, AlertCircle, Clock, ChefHat, CheckCircle2, Flame } from "lucide-react";
 import { useCart, Order, CartItem } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
@@ -293,7 +293,7 @@ export function OrderHistory() {
       const savedGuests = localStorage.getItem("cakbud_guest_order_ids");
       let guestList: string[] = [];
       if (savedGuests) {
-        try { guestList = JSON.parse(savedGuests); } catch (e) {}
+        try { guestList = JSON.parse(savedGuests); } catch {}
       }
       if (!guestList.includes(mappedOrder.id)) {
         guestList.push(mappedOrder.id);

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Star, Plus, Minus, ShoppingBag, Tag, Flame } from "lucide-react";
+import { Plus, Minus, ShoppingBag, Tag, Flame } from "lucide-react";
 import { FoodItem } from "@/lib/data";
 import { FoodImage } from "@/components/ui/FoodImage";
 import { useCart } from "@/context/CartContext";

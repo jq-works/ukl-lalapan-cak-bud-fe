@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import CustomerNavbar from "@/components/customer/navbar";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { FoodImage } from "@/components/ui/FoodImage";
 import { BottomNav } from "@/components/customer/BottomNav";
 import CustomerFooter from "@/components/customer/Footer";
-import { ShieldAlert, ArrowRight, Loader2, User, Phone, Edit3, Check, ShoppingBag, ArrowLeft } from "lucide-react";
+import { ShieldAlert, ArrowRight, Loader2, User, Phone, ShoppingBag, ArrowLeft } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function CheckoutPage() {
@@ -111,7 +110,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
         <CustomerNavbar />
-        <main className="max-w-md w-full mx-auto px-4 pt-16 pb-32 flex-grow text-center space-y-6">
+        <main className="max-w-md w-full mx-auto px-4 pt-16 pb-32 grow text-center space-y-6">
           <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center text-5xl mx-auto">
             🛒
           </div>
@@ -137,7 +136,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
       <CustomerNavbar />
 
-      <main className="max-w-6xl w-full mx-auto px-4 md:px-8 pt-6 pb-32 flex-grow">
+      <main className="max-w-6xl w-full mx-auto px-4 md:px-8 pt-6 pb-32 grow">
         <div className="fade-in space-y-6">
           
           {/* Header Title with Back Link */}
@@ -505,7 +504,7 @@ export default function CheckoutPage() {
                     <div className="w-[1px] h-full bg-stone-900" />
                     <div className="w-[4px] h-full bg-stone-900" />
                     <div className="w-[2px] h-full bg-stone-900" />
-                    <div className="w-[1px] h-full bg-stone-900" />
+                    <div className="w-px h-full bg-stone-900" />
                     <div className="w-[3px] h-full bg-stone-900" />
                     <div className="w-[1px] h-full bg-stone-900" />
                     <div className="w-[4px] h-full bg-stone-900" />

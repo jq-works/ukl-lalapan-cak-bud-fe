@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { FaStar, FaRegStar, FaStarHalfAlt, FaQuoteLeft, FaThumbsUp } from "react-icons/fa";
+import { FaStar, FaQuoteLeft } from "react-icons/fa";
 import { api } from "@/lib/api";
 
 /* ─── Types ───────────────────────────────────────────────── */
@@ -18,123 +18,25 @@ interface Review {
   isVerified: boolean;
 }
 
-/* ─── Data ulasan dummy ───────────────────────────────────── */
-const REVIEWS: Review[] = [
-  {
-    id: "r1",
-    name: "Budi Santoso",
-    avatar: "BS",
-    avatarColor: "bg-primary-500",
-    rating: 5,
-    date: "28 Mei 2026",
-    text: "Lalapan ayam gorengnya enak banget! Sambal koreknya nendang, segar, dan porsinya juga gede. Sudah langganan di sini hampir 2 tahun, konsisten enak!",
-    orderItem: "Paket Lalapan Ayam Goreng Juara",
-    likes: 24,
-    isVerified: true,
-  },
-  {
-    id: "r2",
-    name: "Dewi Rahayu",
-    avatar: "DR",
-    avatarColor: "bg-accent-500",
-    rating: 5,
-    date: "25 Mei 2026",
-    text: "Es dawet ayu-nya mantap banget, gulanya pas, santannya gurih. Cocok banget diminum sambil makan lalapan bebek. Recommended pokoknya!",
-    orderItem: "Es Dawet Ayu Gula Merah",
-    likes: 18,
-    isVerified: true,
-  },
-  {
-    id: "r3",
-    name: "Rizal Firmansyah",
-    avatar: "RF",
-    avatarColor: "bg-blue-500",
-    rating: 4,
-    date: "20 Mei 2026",
-    text: "Ayam penyetnya lembut, sambal ijonya segar dan pedas yang enak. Tempe tahu penyet-nya juga gurih. Hanya nunggu sedikit lama, tapi worth it!",
-    orderItem: "Ayam Penyet Sambal Ijo",
-    likes: 11,
-    isVerified: true,
-  },
-  {
-    id: "r4",
-    name: "Siti Nurhaliza",
-    avatar: "SN",
-    avatarColor: "bg-amber-500",
-    rating: 5,
-    date: "18 Mei 2026",
-    text: "Mendoan panas sama sambal kecapnya beneran enak banget buat cemilan. Tipis, lembut, gurih — persis yang dijual di pasar tradisional Banyumas. Langsung pesan lagi besoknya!",
-    orderItem: "Mendoan Panas Sambal Kecap (Isi 4)",
-    likes: 31,
-    isVerified: false,
-  },
-  {
-    id: "r5",
-    name: "Andi Prasetyo",
-    avatar: "AP",
-    avatarColor: "bg-emerald-600",
-    rating: 5,
-    date: "15 Mei 2026",
-    text: "Bebek gorengnya empuk banget, bumbunya meresap sempurna. Kremesan gurihnya bikin nagih. Ini versi bebek goreng terbaik yang pernah saya coba di Banyumas!",
-    orderItem: "Paket Lalapan Bebek Goreng Empuk",
-    likes: 42,
-    isVerified: true,
-  },
-  {
-    id: "r6",
-    name: "Maya Kurniawati",
-    avatar: "MK",
-    avatarColor: "bg-purple-500",
-    rating: 4,
-    date: "10 Mei 2026",
-    text: "Pisang goreng pasir kejunya enak, renyah di luar lembut di dalam. Kejunya melimpah! Porsinya pas untuk 2 orang. Cocok buat ngemil sore.",
-    orderItem: "Pisang Goreng Pasir Keju",
-    likes: 9,
-    isVerified: true,
-  },
-];
-
 /* ─── Helpers ─────────────────────────────────────────────── */
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((star) => {
-        if (rating >= star)
-          return <FaStar key={star} className="text-amber-400" size={12} />;
-        if (rating >= star - 0.5)
-          return <FaStarHalfAlt key={star} className="text-amber-400" size={12} />;
-        return <FaRegStar key={star} className="text-stone-300" size={12} />;
-      })}
-    </div>
-  );
-}
+
 
 /* ─── Summary bar stats ───────────────────────────────────── */
-const DIST = [
-  { stars: 5, count: 847 },
-  { stars: 4, count: 213 },
-  { stars: 3, count: 64 },
-  { stars: 2, count: 18 },
-  { stars: 1, count: 7 },
-];
-const TOTAL = DIST.reduce((s, d) => s + d.count, 0);
-const AVG = (
-  DIST.reduce((s, d) => s + d.stars * d.count, 0) / TOTAL
-).toFixed(1);
+
 
 /* ─── Component ───────────────────────────────────────────── */
 export default function RestaurantReviews() {
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+
   const [isPaused, setIsPaused] = useState(false);
   const [reviewsList, setReviewsList] = useState<Review[]>([]);
-  const [avgRating, setAvgRating] = useState("4.8");
-  const [totalCount, setTotalCount] = useState(1150);
+  const [avgRating, setAvgRating] = useState("0.0");
+  const [totalCount, setTotalCount] = useState(0);
   const [distribution, setDistribution] = useState([
-    { stars: 5, count: 847 },
-    { stars: 4, count: 213 },
-    { stars: 3, count: 64 },
-    { stars: 2, count: 18 },
-    { stars: 1, count: 7 },
+    { stars: 5, count: 0 },
+    { stars: 4, count: 0 },
+    { stars: 3, count: 0 },
+    { stars: 2, count: 0 },
+    { stars: 1, count: 0 },
   ]);
 
   const fetchReviews = async () => {
@@ -143,66 +45,71 @@ export default function RestaurantReviews() {
       const resData = res.data;
       if (resData.success) {
         const apiReviews = resData.data?.reviews || [];
+        const stats = resData.data?.stats;
         
-        if (apiReviews.length > 0) {
-          const colors = ["bg-primary-500", "bg-accent-500", "bg-blue-500", "bg-amber-500", "bg-emerald-600", "bg-purple-500"];
-          const mapped: Review[] = apiReviews.map((r: any) => {
-            const index = Math.abs(r.user?.name?.charCodeAt(0) || 0) % colors.length;
-            return {
-              id: r.id,
-              name: r.user?.name || "Pelanggan",
-              avatar: (r.user?.name || "P").slice(0, 2).toUpperCase(),
-              avatarColor: colors[index],
-              rating: Number(r.rating || 5),
-              date: new Date(r.createdAt || Date.now()).toLocaleDateString("id-ID", {
-                day: "numeric", month: "short", year: "numeric"
-              }),
-              text: r.menuReview || "",
-              orderItem: r.suggestions ? "Saran: " + r.suggestions : "Ulasan Kuliner",
-              likes: Math.floor(Math.random() * 12) + 2,
-              isVerified: true
-            };
-          });
-          
-          setReviewsList(mapped);
-          
-          // Calculate stats
-          const total = apiReviews.length;
-          const sum = apiReviews.reduce((acc: number, val: any) => acc + Number(val.rating || 5), 0);
-          const avg = (sum / total).toFixed(1);
-          setAvgRating(avg);
-          setTotalCount(total);
-          
-          const starCounts = [0, 0, 0, 0, 0]; // 1, 2, 3, 4, 5 stars
-          apiReviews.forEach((r: any) => {
-            const rating = Math.min(5, Math.max(1, Math.round(Number(r.rating || 5))));
-            starCounts[rating - 1]++;
-          });
-          
-          setDistribution([
-            { stars: 5, count: starCounts[4] },
-            { stars: 4, count: starCounts[3] },
-            { stars: 3, count: starCounts[2] },
-            { stars: 2, count: starCounts[1] },
-            { stars: 1, count: starCounts[0] },
-          ]);
+        const colors = ["bg-primary-500", "bg-accent-500", "bg-blue-500", "bg-amber-500", "bg-emerald-600", "bg-purple-500"];
+        const mapped: Review[] = apiReviews.map((r: any) => {
+          const index = Math.abs(r.user?.name?.charCodeAt(0) || 0) % colors.length;
+          return {
+            id: r.id,
+            name: r.user?.name || "Pelanggan",
+            avatar: (r.user?.name || "P").slice(0, 2).toUpperCase(),
+            avatarColor: colors[index],
+            rating: Number(r.rating || 5),
+            date: new Date(r.createdAt || Date.now()).toLocaleDateString("id-ID", {
+              day: "numeric", month: "short", year: "numeric"
+            }),
+            text: r.menuReview || "",
+            orderItem: r.suggestions ? "Saran: " + r.suggestions : "Ulasan Kuliner",
+            likes: Math.floor(Math.random() * 12) + 2,
+            isVerified: true
+          };
+        });
+        
+        setReviewsList(mapped);
+        
+        // Update stats from backend
+        let total = 0;
+        let avg = "0.0";
+        if (stats) {
+          total = stats.totalReviews || 0;
+          avg = Number(stats.averageRating || 0).toFixed(1);
         } else {
-          // Fallback to dummy data
-          setReviewsList(REVIEWS);
-          setAvgRating("4.8");
-          setTotalCount(1150);
-          setDistribution([
-            { stars: 5, count: 847 },
-            { stars: 4, count: 213 },
-            { stars: 3, count: 64 },
-            { stars: 2, count: 18 },
-            { stars: 1, count: 7 },
-          ]);
+          total = apiReviews.length;
+          const sum = apiReviews.reduce((acc: number, val: any) => acc + Number(val.rating || 5), 0);
+          avg = total > 0 ? (sum / total).toFixed(1) : "0.0";
         }
+        
+        setAvgRating(avg);
+        setTotalCount(total);
+        
+        // Calculate distribution
+        const starCounts = [0, 0, 0, 0, 0]; // 1, 2, 3, 4, 5 stars
+        apiReviews.forEach((r: any) => {
+          const rating = Math.min(5, Math.max(1, Math.round(Number(r.rating || 5))));
+          starCounts[rating - 1]++;
+        });
+        
+        setDistribution([
+          { stars: 5, count: starCounts[4] },
+          { stars: 4, count: starCounts[3] },
+          { stars: 3, count: starCounts[2] },
+          { stars: 2, count: starCounts[1] },
+          { stars: 1, count: starCounts[0] },
+        ]);
       }
     } catch (e) {
       console.error("Gagal mengambil ulasan di RestaurantReviews:", e);
-      setReviewsList(REVIEWS);
+      setReviewsList([]);
+      setAvgRating("0.0");
+      setTotalCount(0);
+      setDistribution([
+        { stars: 5, count: 0 },
+        { stars: 4, count: 0 },
+        { stars: 3, count: 0 },
+        { stars: 2, count: 0 },
+        { stars: 1, count: 0 },
+      ]);
     }
   };
 
@@ -264,13 +171,7 @@ export default function RestaurantReviews() {
 
   const onTouchEnd = useCallback(() => setIsPaused(false), []);
 
-  const toggleLike = (id: string) => {
-    setLikedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
+
 
   const duplicatedReviews = reviewsList.length > 0
     ? (reviewsList.length < 3
@@ -357,14 +258,13 @@ export default function RestaurantReviews() {
           >
             {duplicatedReviews.map((review, idx) => {
               const uniqueKey = `${review.id}-${idx}`;
-              const liked = likedIds.has(review.id);
               return (
                 <div
                   key={uniqueKey}
                   className="flex-shrink-0 w-80 sm:w-[350px] bg-white rounded-2xl shadow-sm border border-stone-100 p-5 flex flex-col justify-between gap-3.5 hover:shadow-md transition-all duration-200"
                 >
                   <div className="space-y-3.5">
-                    {/* Top: avatar + name + rating */}
+                    {/* Top: avatar + name */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         {/* Avatar initials */}
@@ -378,7 +278,6 @@ export default function RestaurantReviews() {
                           <p className="text-[11px] text-stone-400">{review.date}</p>
                         </div>
                       </div>
-                      <StarRating rating={review.rating} />
                     </div>
 
                     {/* Quote icon + review text */}
@@ -398,23 +297,6 @@ export default function RestaurantReviews() {
                         {review.orderItem}
                       </span>
                     </div>
-                  </div>
-
-                  {/* Footer: like button */}
-                  <div className="flex items-center justify-end pt-2 border-t border-stone-50">
-                    <button
-                      onClick={() => toggleLike(review.id)}
-                      className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-xl transition-all duration-200 cursor-pointer active:scale-95 ${
-                        liked
-                          ? "text-primary-600 bg-primary-50"
-                          : "text-stone-400 hover:text-primary-500 hover:bg-primary-50"
-                      }`}
-                      aria-label="Suka ulasan ini"
-                    >
-                      <FaThumbsUp size={11} />
-                      <span>{review.likes + (liked ? 1 : 0)}</span>
-                      <span className="hidden xs:inline">Membantu</span>
-                    </button>
                   </div>
                 </div>
               );

@@ -22,15 +22,10 @@ interface Review {
   createdAt?: string;
 }
 
-const INITIAL_REVIEWS: Review[] = [
-  { id: "1", name: "Dzaky Ramadhan", rating: 5, comment: "Lalapan ayam bakarnya juara! Bumbu meresap sampai ke dalam, sambalnya mantap pol.", suggestions: "Mohon jangkauan pengiriman diperluas ke daerah luar kota sedikit lagi ya.", date: "2026-06-01", role: "Member" },
-  { id: "2", name: "Budi Santoso", rating: 5, comment: "Bebek gorengnya empuk dan tidak bau amis sama sekali. Pelayanan cepat dan higienis.", suggestions: "Pertahankan kualitasnya. Kalau bisa tambahkan menu paket tahu tempe penyet.", date: "2026-05-31", role: "Member" },
-  { id: "3", name: "Siti Rahma", rating: 4, comment: "Nila goreng garing kriuk enak sekali, cuman es teh manisnya kurang manis sedikit.", suggestions: "Opsi es batunya dipisah di plastik lain kalau pesannya take-away.", date: "2026-05-30", role: "Member" },
-  { id: "4", name: "Andi Wijaya", rating: 5, comment: "Sering beli lele goreng di sini lewat web, porsi kenyang harga ramah kantong kosan.", date: "2026-05-28", role: "Member" }
-];
+const INITIAL_REVIEWS: Review[] = [];
 
 export default function UlasanPage() {
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -162,8 +157,9 @@ export default function UlasanPage() {
   };
 
   // Stats
-  const avgRating = totalReviews > 0 ? averageRating : (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
+  const avgRating = totalReviews > 0 ? averageRating : (reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : "0.0");
   const reviewsCount = totalReviews > 0 ? totalReviews : reviews.length;
+
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
@@ -345,14 +341,6 @@ export default function UlasanPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="flex text-amber-400 gap-0.5 justify-end">
-                          {Array.from({ length: 5 }).map((_, idx) => (
-                            <FiStar 
-                              key={idx} 
-                              className={`w-3.5 h-3.5 ${idx < rev.rating ? "fill-current" : ""}`} 
-                            />
-                          ))}
-                        </div>
                         <p className="text-[9px] text-stone-400 mt-1 font-semibold">{rev.date}</p>
                       </div>
                     </div>

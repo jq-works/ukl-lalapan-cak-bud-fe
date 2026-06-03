@@ -4,8 +4,7 @@ import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { 
   FiSearch, FiDollarSign, FiTrendingUp, FiCreditCard, 
-  FiGrid, FiList, FiRefreshCw, FiCalendar, FiUser, 
-  FiCheckCircle, FiActivity, FiXCircle
+  FiGrid, FiList, FiRefreshCw, FiXCircle
 } from "react-icons/fi";
 
 interface PaymentOrder {

@@ -11,19 +11,15 @@ interface FoodImageProps {
 export function FoodImage({ src, alt, className = "" }: FoodImageProps) {
   const [hasError, setHasError] = useState(false);
 
-  if (!src || hasError) {
-    return (
-      <div className={`bg-stone-50 border border-stone-100 flex items-center justify-center select-none ${className}`}>
-        <span className="text-3xl filter drop-shadow-sm">🍽️</span>
-      </div>
-    );
-  }
+  const fallbackSrc = "/images/logo_cakbud.png";
 
   return (
     <img
-      src={src}
+      src={(!src || hasError) ? fallbackSrc : src}
       alt={alt}
-      onError={() => setHasError(true)}
+      onError={() => {
+        if (!hasError) setHasError(true);
+      }}
       className={`object-cover select-none ${className}`}
       loading="lazy"
     />

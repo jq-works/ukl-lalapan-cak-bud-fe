@@ -1,12 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { 
-  FiHome, FiClipboard, FiShoppingBag, FiUsers, FiSettings, 
+  FiHome, FiClipboard, FiShoppingBag, FiSettings, 
   FiLogOut, FiDollarSign, FiMessageSquare
 } from "react-icons/fi";
 import {
@@ -32,14 +32,6 @@ export interface Order {
   createdAt?: string;
 }
 
-const INITIAL_ORDERS: Order[] = [
-  { id: "CB-0931", customerName: "Dzaky", items: "Lalapan Ayam Goreng x2, Es Teh Manis x2", total: 46000, status: "PENDING", date: "2026-06-01 16:45", phone: "08234372348", note: "[DINE IN]", orderType: "DINE_IN" },
-  { id: "CB-0930", customerName: "Budi Santoso", items: "Lalapan Bebek Bakar x1, Jeruk Hangat x1", total: 35000, status: "PROCESSING", date: "2026-06-01 16:20", phone: "081234567890", note: "[TAKE AWAY]", orderType: "TAKE_AWAY" },
-  { id: "CB-0929", customerName: "Fahry Admin", items: "Lalapan Nila Goreng x2, Jus Alpukat x2", total: 64000, status: "PROCESSING", date: "2026-06-01 15:10", phone: "08122334455", note: "[DINE IN]", orderType: "DINE_IN" },
-  { id: "CB-0928", customerName: "Siti Rahma", items: "Lalapan Ayam Bakar x3, Es Jeruk x3", total: 78000, status: "PROCESSING", date: "2026-06-01 14:05", phone: "08987654321", note: "[DINE IN]", orderType: "DINE_IN" },
-  { id: "CB-0927", customerName: "Andi Wijaya", items: "Lalapan Lele Goreng x2, Es Teh x2", total: 36000, status: "COMPLETED", date: "2026-06-01 12:30", phone: "085544332211", note: "[TAKE AWAY]", orderType: "TAKE_AWAY" },
-  { id: "CB-0926", customerName: "Dewi Lestari", items: "Lalapan Bebek Goreng x1, Es Campur x1", total: 38000, status: "CANCELLED", date: "2026-06-01 11:15", phone: "08776655443", note: "[TAKE AWAY]", orderType: "TAKE_AWAY" },
-];
 
 export const STATUS_CONFIG = {
   PENDING:    { label: "Menunggu",    bg: "bg-amber-50 text-amber-700 border-amber-200",   dot: "bg-amber-400" },
@@ -73,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [orders, setOrders] = useState<Order[]>([]);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     const savedToken = token || localStorage.getItem("cakbud_token");
     if (!savedToken) return;
     try {
@@ -111,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } catch (err) {
       console.error("Gagal mengambil orders admin dari API:", err);
     }
-  };
+  }, [token]);
 
   // Fetch admin orders on mount and auth state updates, then start a 15s refresh interval
   useEffect(() => {
@@ -120,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       const interval = setInterval(fetchOrders, 15000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, user, token]);
+  }, [isAuthenticated, user, fetchOrders]);
 
   // Secure route check
   useEffect(() => {

@@ -13,7 +13,7 @@ export default function AccountPage() {
     <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
       <CustomerNavbar />
 
-      <main className="max-w-2xl w-full mx-auto px-4 md:px-8 pt-6 pb-32 flex-grow">
+      <main className="max-w-2xl w-full mx-auto px-4 md:px-8 pt-6 pb-32 grow">
         <div className="fade-in space-y-6">
           <div>
             <h1 className="text-2xl font-extrabold text-stone-900 tracking-tight">Akun Saya</h1>

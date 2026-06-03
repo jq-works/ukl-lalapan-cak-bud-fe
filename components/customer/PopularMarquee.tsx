@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useCallback } from "react";
-import { Flame, Star, Plus, Check } from "lucide-react";
+import { Flame, Plus, Check } from "lucide-react";
 import { FoodImage } from "@/components/ui/FoodImage";
 import { useCart } from "@/context/CartContext";
 

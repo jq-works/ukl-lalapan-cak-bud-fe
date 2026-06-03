@@ -184,7 +184,7 @@ export default function CustomerHero() {
                 ) : (
                   <div className="py-6 text-center text-stone-400">
                     <p className="text-xs font-bold">Menu tidak ditemukan</p>
-                    <p className="text-[10px]">Coba cari "Ayam", "Bebek" atau "Dawet"</p>
+                    <p className="text-[10px]">Coba cari &quot;Ayam&quot;, &quot;Bebek&quot; atau &quot;Dawet&quot;</p>
                   </div>
                 )}
               </motion.div>

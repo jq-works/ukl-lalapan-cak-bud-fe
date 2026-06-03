@@ -24,6 +24,13 @@ export interface Order {
   orderType?: "DINE_IN" | "TAKE_AWAY";
   note?: string;
   createdAt?: string;
+  payment?: {
+    id: string;
+    amount: number;
+    method: string;
+    status: string;
+    createdAt: string;
+  } | null;
 }
 
 interface CartState {
@@ -164,7 +171,7 @@ export const useCartStore = create<CartState>((set) => ({
     const savedUserStr = typeof window !== "undefined" ? localStorage.getItem("cakbud_user") : null;
     let savedUser = null;
     if (savedUserStr) {
-      try { savedUser = JSON.parse(savedUserStr); } catch (e) {}
+      try { savedUser = JSON.parse(savedUserStr); } catch {}
     }
 
     const phone = guestDetails ? guestDetails.phone : (savedUser?.phone || "");
@@ -254,7 +261,7 @@ export const useCartStore = create<CartState>((set) => ({
           const savedGuests = localStorage.getItem("cakbud_guest_order_ids");
           let guestList = [];
           if (savedGuests) {
-            try { guestList = JSON.parse(savedGuests); } catch (e) {}
+            try { guestList = JSON.parse(savedGuests); } catch {}
           }
           guestList.push(guestOrderObj.id);
           localStorage.setItem("cakbud_guest_order_ids", JSON.stringify(guestList));
@@ -272,7 +279,7 @@ export const useCartStore = create<CartState>((set) => ({
 
   reorder: (order) => {
     set((state) => {
-      let updatedCart = [...state.cart];
+      const updatedCart = [...state.cart];
       order.items.forEach((orderedItem) => {
         const existingIdx = updatedCart.findIndex((i) => i.id === orderedItem.id);
         if (existingIdx > -1) {
@@ -302,7 +309,7 @@ export const useCartStore = create<CartState>((set) => ({
     set({ isLoadingMenu: true });
     try {
       const catRes = await api.get("/categories");
-      let fetchedCategories: string[] = ["Semua"];
+      const fetchedCategories: string[] = ["Semua"];
       if (catRes.status === 200) {
         const catData = catRes.data;
         const cats = catData.data || [];
@@ -364,7 +371,8 @@ export const useCartStore = create<CartState>((set) => ({
                         customerName: o.guestName || o.customerName || "Tamu",
                         orderType: o.orderType || (o.note?.includes("[DINE IN]") ? "DINE_IN" : "TAKE_AWAY"),
                         note: o.note || "",
-                        createdAt: o.createdAt || o.date || ""
+                        createdAt: o.createdAt || o.date || "",
+                        payment: o.payment || null
                       } as Order;
                     }
                   }
@@ -414,7 +422,8 @@ export const useCartStore = create<CartState>((set) => ({
             customerName: o.user?.name || o.customerName || "Member",
             orderType: o.orderType || (o.note?.includes("[DINE IN]") ? "DINE_IN" : "TAKE_AWAY"),
             note: o.note || "",
-            createdAt: o.createdAt || o.date || ""
+            createdAt: o.createdAt || o.date || "",
+            payment: o.payment || null
           };
         });
         set({ orders: mappedOrders });
