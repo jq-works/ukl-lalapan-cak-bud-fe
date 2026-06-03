@@ -131,14 +131,16 @@ export default function RestaurantReviews() {
                       </p>
                     </div>
 
-                    {/* Ordered item badge */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
-                        Dipesan:
-                      </span>
-                      <span className="text-[10px] font-semibold text-primary-600 bg-primary-50 rounded-md px-2 py-0.5 line-clamp-1">
-                        {review.orderItem}
-                      </span>
+                    {/* Star rating */}
+                    <div className="flex items-center gap-0.5">
+                      {Array.from({ length: 5 }).map((_, idx) => (
+                        <FaStar
+                          key={idx}
+                          className={`w-3.5 h-3.5 ${
+                            idx < review.rating ? "text-amber-400" : "text-stone-200"
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
