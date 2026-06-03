@@ -9,6 +9,45 @@ import { useAuth } from "@/context/AuthContext";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useOrderHistory } from "./hooks/useOrderHistory";
 
+function ConfettiEffect() {
+  const colors = ["#2d7a3e", "#3a9e52", "#f59e0b", "#3b82f6", "#ef4444", "#ec4899"];
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-25">
+      {Array.from({ length: 30 }).map((_, i) => {
+        const size = Math.random() * 6 + 4;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const initialX = Math.random() * 100;
+        const delay = Math.random() * 1.5;
+        return (
+          <motion.div
+            key={i}
+            className="absolute rounded-sm"
+            style={{
+              width: size,
+              height: size,
+              backgroundColor: color,
+              left: `${initialX}%`,
+              top: "-10px",
+            }}
+            animate={{
+              y: ["0px", "250px"],
+              x: [`0px`, `${Math.random() * 50 - 25}px`],
+              rotate: [0, Math.random() * 360],
+              opacity: [1, 1, 0],
+            }}
+            transition={{
+              duration: Math.random() * 2 + 1.5,
+              delay: delay,
+              repeat: Infinity,
+              ease: "easeOut",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 function PremiumVisualTracker({ status, estimatedTime }: { status: Order["status"]; estimatedTime?: string }) {
   const steps: { label: string; statusMatch: Order["status"][]; desc: string; icon: React.ComponentType<any> }[] = [
     { 
@@ -52,7 +91,12 @@ function PremiumVisualTracker({ status, estimatedTime }: { status: Order["status
   const currentStep = steps[activeIndex] || steps[0];
 
   return (
-    <div className="bg-gradient-to-br from-stone-50 to-stone-100/50 border border-stone-150/45 rounded-2xl p-4.5 space-y-4 shadow-sm relative overflow-hidden">
+    <div className={`bg-gradient-to-br from-stone-50 to-stone-100/50 border rounded-2xl p-4.5 space-y-4 shadow-sm relative overflow-hidden transition-all duration-500 ${
+      status === "COMPLETED" ? "border-emerald-200 shadow-emerald-50" : "border-stone-150/45"
+    }`}>
+      {/* Efek Confetti ketika status tracking selesai (COMPLETED) */}
+      {status === "COMPLETED" && <ConfettiEffect />}
+
       {/* Background glowing ambient filter */}
       <div className="absolute -right-12 -top-12 w-28 h-28 bg-[#2d7a3e]/5 rounded-full blur-2xl pointer-events-none" />
 
@@ -95,8 +139,18 @@ function PremiumVisualTracker({ status, estimatedTime }: { status: Order["status
                         ? "bg-[#2d7a3e] border-[#2d7a3e] text-white" 
                         : "bg-white border-stone-250 text-stone-400"
                   }`}
-                  animate={isCurrent ? { scale: [1, 1.06, 1] } : {}}
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  animate={
+                    isCurrent 
+                      ? status === "COMPLETED"
+                        ? { scale: [1, 1.15, 1], rotate: [0, -5, 5, 0] }
+                        : { scale: [1, 1.06, 1] }
+                      : {}
+                  }
+                  transition={
+                    isCurrent && status === "COMPLETED"
+                      ? { repeat: Infinity, duration: 1.2, ease: "easeInOut" }
+                      : { repeat: Infinity, duration: 2, ease: "easeInOut" }
+                  }
                 >
                   {isCurrent && StepIcon === ChefHat ? (
                     <motion.div
@@ -111,6 +165,13 @@ function PremiumVisualTracker({ status, estimatedTime }: { status: Order["status
                       transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
                     >
                       <StepIcon className="w-5 h-5 stroke-[2.5]" />
+                    </motion.div>
+                  ) : isCurrent && StepIcon === CheckCircle2 ? (
+                    <motion.div
+                      animate={{ scale: [1, 1.25, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                    >
+                      <StepIcon className="w-5 h-5 stroke-[2.5] text-emerald-650" />
                     </motion.div>
                   ) : (
                     <StepIcon className="w-5 h-5 stroke-[2.5]" />
@@ -133,8 +194,19 @@ function PremiumVisualTracker({ status, estimatedTime }: { status: Order["status
       <motion.div 
         key={status}
         initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white border border-stone-150/40 rounded-xl p-3 flex items-center gap-2.5 shadow-sm"
+        animate={
+          status === "COMPLETED"
+            ? { opacity: 1, y: 0, scale: [1, 1.02, 1] }
+            : { opacity: 1, y: 0 }
+        }
+        transition={
+          status === "COMPLETED"
+            ? { repeat: Infinity, duration: 2, ease: "easeInOut" }
+            : {}
+        }
+        className={`bg-white border rounded-xl p-3 flex items-center gap-2.5 shadow-sm ${
+          status === "COMPLETED" ? "border-emerald-250" : "border-stone-150/40"
+        }`}
       >
         {status === "PROCESSING" ? (
           <Flame className="w-4 h-4 text-orange-500 animate-bounce shrink-0" />
