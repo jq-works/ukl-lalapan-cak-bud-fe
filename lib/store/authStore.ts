@@ -99,6 +99,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: false,
   error: null,
 
+  // Aksi login: mengirim kredensial ke API, menyimpan profil dan token JWT ke lokal.
   login: async (email, password) => {
     set({ error: null, isLoading: true });
 
@@ -160,6 +161,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
+  // Aksi registrasi: mendaftarkan akun member baru menggunakan authService.
   register: async (name, email, password, phone) => {
     set({ error: null, isLoading: true });
 
@@ -199,6 +201,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setError: (error) => set({ error }),
 
+  // Aksi perbarui profil: mengirimkan perubahan data profil pengguna ke server.
   updateProfile: async (name, phone, email, oldPassword, newPassword) => {
     set({ error: null, isLoading: true });
     try {
