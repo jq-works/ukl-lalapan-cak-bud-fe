@@ -1,6 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import CustomerNavbar from "@/components/customer/navbar";
 import { BottomNav } from "@/components/customer/BottomNav";
 import CustomerFooter from "@/components/customer/Footer";
@@ -10,37 +13,78 @@ import { CheckoutPenyajian } from "@/components/customer/CheckoutPenyajian";
 import { CheckoutInfoForm } from "@/components/customer/CheckoutInfoForm";
 import { CheckoutNotesAndPayment, CheckoutSummaryCard } from "@/components/customer/CheckoutSummaryCard";
 import { CheckoutPaymentModal } from "@/components/customer/CheckoutPaymentModal";
-import { useCheckoutForm } from "./hooks/useCheckoutForm";
 
 export default function CheckoutPage() {
-  const {
-    cart,
-    isAuthenticated,
-    user,
-    isLoading,
-    isSubmitting,
-    checkoutMode,
-    setCheckoutMode,
-    guestName,
-    setGuestName,
-    guestPhone,
-    setGuestPhone,
-    orderNote,
-    setOrderNote,
-    formError,
-    orderType,
-    setOrderType,
-    paymentMethod,
-    setPaymentMethod,
-    showPaymentSimulation,
-    setShowPaymentSimulation,
-    subtotal,
-    serviceFee,
-    total,
-    handleCheckoutClick,
-    executeCheckout,
-    router,
-  } = useCheckoutForm();
+  const { cart, checkout } = useCart();
+  const { isAuthenticated, user, isLoading } = useAuth();
+  const router = useRouter();
+
+  // Status proses transaksi (loading submit)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Data informasi identitas pelanggan
+  const [checkoutMode, setCheckoutMode] = useState<"member" | "guest">("member");
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [orderNote, setOrderNote] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // Detail cara penyajian, pembayaran, dan simulasi
+  const [orderType, setOrderType] = useState<"dine_in" | "take_away">("take_away");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "qris" | "transfer">("qris");
+  const [showPaymentSimulation, setShowPaymentSimulation] = useState(false);
+
+  // Menentukan jenis checkout (member / tamu) secara otomatis berdasarkan login
+  useEffect(() => {
+    setCheckoutMode(isAuthenticated ? "member" : "guest");
+  }, [isAuthenticated]);
+
+  // Kalkulasi rincian total pembayaran belanjaan
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const serviceFee = 2000;
+  const total = subtotal + serviceFee;
+
+  // Validasi data input pemesan tamu sebelum masuk ke pembayaran
+  const handleCheckoutClick = () => {
+    setFormError(null);
+
+    if (!isAuthenticated && checkoutMode === "guest") {
+      if (!guestName.trim()) return setFormError("Nama lengkap pemesan wajib diisi.");
+      if (!guestPhone.trim()) return setFormError("Nomor WhatsApp wajib diisi.");
+      if (!/^[0-9+]{8,15}$/.test(guestPhone.replace(/\s+/g, ""))) {
+        return setFormError("Nomor WhatsApp tidak valid. Gunakan angka.");
+      }
+    }
+
+    setShowPaymentSimulation(true);
+  };
+
+  // Mengirimkan data pesanan belanja ke server
+  const executeCheckout = async (initialStatus: "PENDING" | "PROCESSING") => {
+    setIsSubmitting(true);
+    try {
+      const typeLabel = orderType === "dine_in" ? "DINE IN" : "TAKE AWAY";
+      const activePhone = isAuthenticated ? (user?.phone || "") : guestPhone;
+      const phoneTag = activePhone ? `[HP: ${activePhone}] ` : "";
+      const finalNote = `[${typeLabel}] ${phoneTag}${orderNote}`.trim();
+      const apiOrderType = orderType === "dine_in" ? "DINE_IN" : "TAKE_AWAY";
+
+      const guestData = isAuthenticated ? undefined : { name: guestName, phone: guestPhone };
+      const success = await checkout(guestData, finalNote, initialStatus, apiOrderType, paymentMethod);
+      
+      if (success) {
+        setGuestName("");
+        setGuestPhone("");
+        setOrderNote("");
+        setShowPaymentSimulation(false);
+        router.push("/orders");
+      }
+    } catch (err: any) {
+      setFormError(err.message || "Gagal melakukan pesanan. Silakan coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -53,7 +97,7 @@ export default function CheckoutPage() {
     );
   }
 
-  // Redirect to home if cart is empty and not submitting
+  // Dialihkan ke menu utama jika keranjang kosong
   if (cart.length === 0 && !isSubmitting) {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col justify-start text-stone-850">
@@ -87,7 +131,6 @@ export default function CheckoutPage() {
       <main className="max-w-6xl w-full mx-auto px-4 md:px-8 pt-6 pb-32 grow">
         <div className="fade-in space-y-6">
           
-          {/* Header Title with Back Link */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h1 className="text-2xl font-extrabold text-stone-900 tracking-tight">Checkout Pesanan</h1>
@@ -95,20 +138,17 @@ export default function CheckoutPage() {
             </div>
             <button
               onClick={() => router.push("/")}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 text-stone-600 rounded-xl text-xs font-bold hover:bg-stone-50 active:scale-95 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-stone-200 text-stone-650 rounded-xl text-xs font-bold hover:bg-stone-50 active:scale-95 transition-all cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               Kembali ke Menu
             </button>
           </div>
 
-          {/* Checkout Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            {/* Left/Middle Column: Customer Info & Setup Forms */}
             <div className="lg:col-span-2 space-y-6">
               
-              {/* Form Error Alert */}
               {formError && (
                 <Alert variant="destructive" className="animate-shake">
                   <ShieldAlert className="w-4 h-4 mt-0.5" />
@@ -119,13 +159,11 @@ export default function CheckoutPage() {
                 </Alert>
               )}
 
-              {/* Card 1: Order Penyajian Type */}
               <CheckoutPenyajian
                 orderType={orderType}
                 setOrderType={setOrderType}
               />
 
-              {/* Card 2: Customer Identity Information */}
               <CheckoutInfoForm
                 isAuthenticated={isAuthenticated}
                 user={user}
@@ -137,7 +175,6 @@ export default function CheckoutPage() {
                 setGuestPhone={setGuestPhone}
               />
 
-              {/* Card 3: Additional Notes & Payment Method */}
               <CheckoutNotesAndPayment
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
@@ -149,10 +186,8 @@ export default function CheckoutPage() {
 
             </div>
 
-            {/* Right Column: Order items summary & Billing total */}
             <div className="space-y-6 lg:col-span-1">
               
-              {/* Order Items Review */}
               <CheckoutSummaryCard
                 cart={cart}
                 subtotal={subtotal}
@@ -171,7 +206,6 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      {/* Payment Simulation Dialog Modal */}
       <CheckoutPaymentModal
         showPaymentSimulation={showPaymentSimulation}
         setShowPaymentSimulation={setShowPaymentSimulation}
