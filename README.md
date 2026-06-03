@@ -130,8 +130,17 @@ npm run build
 
 Aplikasi front-end ini terintegrasi langsung dengan server backend menggunakan endpoint dasar yang didefinisikan pada `.env`.
 
-### 🏗️ Arsitektur Data Fetching (Modular Services)
-Untuk menjaga kode tetap bersih, mudah dibaca, dan terstruktur, semua pemanggilan REST API (menggunakan Axios) dikelompokkan ke dalam modul layanan di dalam folder `lib/services/`. Hal ini memisahkan logika UI/State dengan logika komunikasi server.
+### 🏗️ Arsitektur Data Fetching (Simplified Modular Services)
+Untuk menjaga kode tetap bersih, mudah dibaca, dan terstruktur, semua pemanggilan REST API (menggunakan Axios) dikelompokkan ke dalam modul layanan di dalam folder `lib/services/` menggunakan sintaks fungsi panah (*arrow functions*) yang ringkas dan padat. Hal ini memisahkan logika UI/State dengan logika komunikasi server dengan sangat minimalis.
+
+#### Contoh Desain Service Sederhana (`lib/services/menuService.ts`):
+```typescript
+import { api } from "../api";
+
+export const getMenuItems = () => api.get("/menu-items");
+export const createMenuItem = (payload: any) => api.post("/menu-items", payload);
+export const deleteMenuItem = (id: string) => api.delete(`/menu-items/${id}`);
+```
 
 #### Daftar Service & Endpoint:
 1. **`authService`** (`lib/services/authService.ts`)
