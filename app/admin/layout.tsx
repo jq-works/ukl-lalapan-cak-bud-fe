@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/lib/api";
+import { orderService } from "@/lib/services";
 import Link from "next/link";
 import { 
   FiHome, FiClipboard, FiShoppingBag, FiSettings, 
@@ -69,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const savedToken = token || localStorage.getItem("cakbud_token");
     if (!savedToken) return;
     try {
-      const response = await api.get("/orders");
+      const response = await orderService.getOrders();
       const resData = response.data;
       if (resData.success === false) {
         throw new Error(resData.message || "Gagal mengambil data orders");
@@ -147,7 +147,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     try {
       const apiStatus = newStatus === "CANCELLED" ? "CANCELED" : newStatus;
-      const response = await api.patch(`/orders/${id}/status`, { status: apiStatus });
+      const response = await orderService.updateOrderStatus(id, apiStatus);
       const resData = response.data;
       if (resData.success === false) {
         throw new Error(resData.message || "Gagal memperbarui status order di server");

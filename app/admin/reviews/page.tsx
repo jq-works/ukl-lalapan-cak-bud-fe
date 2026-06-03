@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { api } from "@/lib/api";
+import { reviewService } from "@/lib/services";
 import { 
   FiSearch, FiStar, FiMessageSquare, FiTrash2, 
   FiAlertCircle, FiRefreshCw, FiArrowLeft,
@@ -56,7 +56,7 @@ export default function AdminReviewsPage() {
     setError(null);
 
     try {
-      const response = await api.get("/reviews");
+      const response = await reviewService.getReviews();
       const resData = response.data;
       if (resData.success) {
         const stats = resData.data?.stats;
@@ -104,7 +104,7 @@ export default function AdminReviewsPage() {
     if (!deletingReview) return;
     setIsDeleting(true);
     try {
-      const response = await api.delete(`/reviews/${deletingReview.id}`);
+      const response = await reviewService.deleteReview(deletingReview.id);
       const resData = response.data;
       if (resData.success === false) {
         throw new Error(resData.message || "Gagal menghapus ulasan dari server.");

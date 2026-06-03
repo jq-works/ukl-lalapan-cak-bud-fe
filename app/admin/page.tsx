@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { api } from "@/lib/api";
+import { menuService } from "@/lib/services";
 import { useAuth } from "@/context/AuthContext";
 import { useAdminOrders, STATUS_CONFIG } from "./layout";
 import { FiTrendingUp, FiClock, FiCheckCircle } from "react-icons/fi";
@@ -28,7 +28,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const fetchMenuCount = async () => {
       try {
-        const res = await api.get("/menu-items");
+        const res = await menuService.getMenuItems();
         const resData = res.data;
         if (resData.success !== false) {
           const items = resData.data || [];

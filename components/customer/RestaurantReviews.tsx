@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { FaStar, FaQuoteLeft } from "react-icons/fa";
-import { api } from "@/lib/api";
+import { reviewService } from "@/lib/services";
 
 /* ─── Types ───────────────────────────────────────────────── */
 interface Review {
@@ -41,7 +41,7 @@ export default function RestaurantReviews() {
 
   const fetchReviews = async () => {
     try {
-      const res = await api.get("/reviews");
+      const res = await reviewService.getReviews();
       const resData = res.data;
       if (resData.success) {
         const apiReviews = resData.data?.reviews || [];

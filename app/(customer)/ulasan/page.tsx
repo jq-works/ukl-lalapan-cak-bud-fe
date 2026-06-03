@@ -8,7 +8,7 @@ import { CartDrawer } from "@/components/customer/CartDrawer";
 import { BottomNav } from "@/components/customer/BottomNav";
 import CustomerFooter from "@/components/customer/Footer";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/lib/api";
+import { reviewService } from "@/lib/services";
 import { FiStar, FiMessageSquare, FiSend, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
 
 interface Review {
@@ -66,7 +66,7 @@ export default function UlasanPage() {
   // Fetch reviews from API
   const fetchReviews = async () => {
     try {
-      const response = await api.get("/reviews");
+      const response = await reviewService.getReviews();
       const resData = response.data;
       if (resData.success) {
         const stats = resData.data?.stats;
@@ -127,7 +127,7 @@ export default function UlasanPage() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const response = await api.post("/reviews", {
+      const response = await reviewService.createReview({
         rating,
         menuReview: comment.trim(),
         suggestions: suggestions.trim() || undefined

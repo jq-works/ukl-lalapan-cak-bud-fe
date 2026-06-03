@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import Cookies from "js-cookie";
-import { api } from "../api";
+import { authService } from "../services";
 
 export interface UserProfile {
   id: string;
@@ -110,7 +110,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     try {
-      const response = await api.post("/auth/login", { email, password });
+      const response = await authService.login(email, password);
       const data = response.data;
 
       if (data.success === false) {
@@ -164,7 +164,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ error: null, isLoading: true });
 
     try {
-      const response = await api.post("/auth/register", { name, email, password, phone });
+      const response = await authService.register({ name, email, password, phone });
       const data = response.data;
 
       if (data.success === false) {
@@ -206,7 +206,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (newPassword) {
         payload.newPassword = newPassword;
       }
-      const response = await api.patch("/auth/update-profile", payload);
+      const response = await authService.updateProfile(payload);
       const data = response.data;
 
       if (data.success === false) {

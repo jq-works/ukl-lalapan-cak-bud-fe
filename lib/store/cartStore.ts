@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import Cookies from "js-cookie";
-import { api } from "../api";
+import { orderService, paymentService, categoryService, menuService } from "../services";
 import { FoodItem } from "../data";
 
 export interface CartItem {
@@ -187,7 +187,7 @@ export const useCartStore = create<CartState>((set) => ({
       const savedToken = Cookies.get("cakbud_token") || (typeof window !== "undefined" ? localStorage.getItem("cakbud_token") : null);
 
       if (guestDetails) {
-        response = await api.post("/orders/guest", {
+        response = await orderService.createGuestOrder({
           guestName: guestDetails.name,
           guestPhone: guestDetails.phone,
           items: apiItems,
@@ -195,7 +195,7 @@ export const useCartStore = create<CartState>((set) => ({
           note: note || ""
         });
       } else if (savedToken) {
-        response = await api.post("/orders", {
+        response = await orderService.createMemberOrder({
           items: apiItems,
           orderType: orderType || "TAKE_AWAY",
           note: note || ""
@@ -224,9 +224,9 @@ export const useCartStore = create<CartState>((set) => ({
           
           if (apiMethod) {
             if (guestDetails) {
-              await api.post(`/payments/guest/${createdOrder.id}`, { method: apiMethod });
+              await paymentService.createGuestPayment(createdOrder.id, { method: apiMethod });
             } else {
-              await api.post(`/payments/${createdOrder.id}`, { method: apiMethod });
+              await paymentService.createMemberPayment(createdOrder.id, { method: apiMethod });
             }
           }
         } catch (payErr) {
@@ -308,7 +308,7 @@ export const useCartStore = create<CartState>((set) => ({
   refreshMenu: async () => {
     set({ isLoadingMenu: true });
     try {
-      const catRes = await api.get("/categories");
+      const catRes = await categoryService.getCategories();
       const fetchedCategories: string[] = ["Semua"];
       if (catRes.status === 200) {
         const catData = catRes.data;
@@ -321,7 +321,7 @@ export const useCartStore = create<CartState>((set) => ({
       }
       set({ categories: fetchedCategories });
 
-      const menuRes = await api.get("/menu-items");
+      const menuRes = await menuService.getMenuItems();
       if (menuRes.status === 200) {
         const menuData = menuRes.data;
         const items = menuData.data || [];
@@ -345,7 +345,7 @@ export const useCartStore = create<CartState>((set) => ({
             if (guestIds.length > 0) {
               const fetchPromises = guestIds.map(async (id) => {
                 try {
-                  const res = await api.get(`/orders/guest/track/${id}`);
+                  const res = await orderService.trackGuestOrder(id);
                   if (res.status === 200) {
                     const resData = res.data;
                     const o = resData.data || resData.order;
@@ -396,7 +396,7 @@ export const useCartStore = create<CartState>((set) => ({
       return;
     }
     try {
-      const response = await api.get("/orders/me");
+      const response = await orderService.getMyOrders();
       if (response.status === 200) {
         const resData = response.data;
         const apiOrders = resData.data || resData.orders || [];

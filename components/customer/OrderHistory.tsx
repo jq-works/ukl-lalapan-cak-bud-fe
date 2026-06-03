@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { ClipboardList, Copy, Check, RefreshCw, Search, AlertCircle, Clock, ChefHat, CheckCircle2, Flame } from "lucide-react";
 import { useCart, Order, CartItem } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/lib/api";
+import { orderService } from "@/lib/services";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 function PremiumVisualTracker({ status, estimatedTime }: { status: Order["status"]; estimatedTime?: string }) {
@@ -181,7 +181,7 @@ export function OrderHistory() {
               
               for (const id of guestIds) {
                 try {
-                  const res = await api.get(`/orders/guest/track/${id}`);
+                  const res = await orderService.trackGuestOrder(id);
                   if (res.status === 200) {
                     const resData = res.data;
                     const o = resData.data || resData.order;
@@ -250,7 +250,7 @@ export function OrderHistory() {
     setHasSearched(true);
 
     try {
-      const response = await api.get(`/orders/guest/track/${trackOrderId.trim()}`);
+      const response = await orderService.trackGuestOrder(trackOrderId.trim());
       
       if (response.status !== 200) {
         throw new Error("Pesanan tidak ditemukan. Silakan periksa kembali ID Pesanan Anda.");

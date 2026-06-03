@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { orderService } from "@/lib/services";
 import { FiPrinter, FiX, FiLoader, FiAlertTriangle } from "react-icons/fi";
 
 interface OrderItem {
@@ -49,7 +49,7 @@ export default function OrderReceiptPage({ params }: PageProps) {
     const fetchOrderDetail = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`/orders/${id}`);
+        const response = await orderService.getOrderDetail(id);
         if (response.data?.success) {
           setOrder(response.data.data);
         } else {

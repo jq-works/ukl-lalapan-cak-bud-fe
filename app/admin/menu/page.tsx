@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 
 import { useAlert } from "@/context/AlertContext";
-import { api } from "@/lib/api";
+import { menuService, categoryService } from "@/lib/services";
 import { 
   FiSearch, FiPlus, FiFolder, FiCoffee, 
   FiGrid, FiList, FiRefreshCw
@@ -77,7 +77,7 @@ export default function AdminMenuPage() {
     setIsLoading(true);
     try {
       // 1. Fetch Categories
-      const catRes = await api.get("/categories");
+      const catRes = await categoryService.getCategories();
       const catData = catRes.data;
       if (catData.success === false) {
         throw new Error(catData.message || "Gagal mengambil data kategori");
@@ -85,7 +85,7 @@ export default function AdminMenuPage() {
       const loadedCategories: ApiCategory[] = catData.data || [];
  
       // 2. Fetch Menu Items
-      const menuRes = await api.get("/menu-items");
+      const menuRes = await menuService.getMenuItems();
       const menuData = menuRes.data;
       if (menuData.success === false) {
         throw new Error(menuData.message || "Gagal mengambil data menu");
@@ -125,7 +125,7 @@ export default function AdminMenuPage() {
     setMenuItems(updatedItems);
 
     try {
-      const res = await api.patch(`/menu-items/${item.id}`, { isAvailable: updatedStatus });
+      const res = await menuService.updateMenuItem(item.id, { isAvailable: updatedStatus });
       const resData = res.data;
       if (resData.success === false) {
         throw new Error(resData.message || "Gagal memperbarui status di server");
@@ -144,7 +144,7 @@ export default function AdminMenuPage() {
 
     const targetId = deletingItem.id;
     try {
-      const res = await api.delete(`/menu-items/${targetId}`);
+      const res = await menuService.deleteMenuItem(targetId);
       const resData = res.data;
       if (resData.success === false) {
         throw new Error(resData.message || "Gagal menghapus item dari server");
@@ -218,7 +218,7 @@ export default function AdminMenuPage() {
     if (editingItem) {
       // EDIT MENU ITEM
       try {
-        const res = await api.patch(`/menu-items/${editingItem.id}`, payload);
+        const res = await menuService.updateMenuItem(editingItem.id, payload);
         const resData = res.data;
         if (resData.success === false) {
           throw new Error(resData.message || "Gagal menyimpan perubahan ke server");
@@ -238,7 +238,7 @@ export default function AdminMenuPage() {
     } else {
       // CREATE MENU ITEM
       try {
-        const res = await api.post("/menu-items", payload);
+        const res = await menuService.createMenuItem(payload);
         const resData = res.data;
         if (resData.success === false) {
           throw new Error(resData.message || "Gagal membuat menu baru di server");
@@ -297,7 +297,7 @@ export default function AdminMenuPage() {
     if (editingCategory) {
       // EDIT CATEGORY
       try {
-        const res = await api.patch(`/categories/${editingCategory.id}`, payload);
+        const res = await categoryService.updateCategory(editingCategory.id, payload);
         const resData = res.data;
         if (resData.success === false) {
           throw new Error(resData.message || "Gagal mengubah kategori di server");
@@ -323,7 +323,7 @@ export default function AdminMenuPage() {
     } else {
       // CREATE CATEGORY
       try {
-        const res = await api.post("/categories", payload);
+        const res = await categoryService.createCategory(payload);
         const resData = res.data;
         if (resData.success === false) {
           throw new Error(resData.message || "Gagal membuat kategori baru di server");
@@ -349,7 +349,7 @@ export default function AdminMenuPage() {
     const targetId = deletingCategory.id;
 
     try {
-      const res = await api.delete(`/categories/${targetId}`);
+      const res = await categoryService.deleteCategory(targetId);
       const resData = res.data;
       if (resData.success === false) {
         throw new Error(resData.message || "Gagal menghapus kategori dari server");

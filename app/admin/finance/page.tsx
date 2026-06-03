@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { api } from "@/lib/api";
+import { paymentService } from "@/lib/services";
 import { 
   FiSearch, FiGrid, FiList, FiRefreshCw, FiXCircle
 } from "react-icons/fi";
@@ -34,7 +34,7 @@ export default function AdminFinancePage() {
   const fetchPayments = async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) setIsRefreshing(true);
     try {
-      const response = await api.get("/payments");
+      const response = await paymentService.getPayments();
       const resData = response.data;
       if (resData.success === false) {
         throw new Error(resData.message || "Gagal mengambil data keuangan");
