@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ClipboardList, Copy, Check, RefreshCw, Search, AlertCircle, Clock, ChefHat, CheckCircle2, Flame } from "lucide-react";
-import { useCart, Order, CartItem } from "@/context/CartContext";
+import { useCart, Order } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { orderService } from "@/lib/services";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useOrderHistory } from "./hooks/useOrderHistory";
 
 function PremiumVisualTracker({ status, estimatedTime }: { status: Order["status"]; estimatedTime?: string }) {
   const steps: { label: string; statusMatch: Order["status"][]; desc: string; icon: React.ComponentType<any> }[] = [
@@ -154,180 +154,21 @@ function PremiumVisualTracker({ status, estimatedTime }: { status: Order["status
 export function OrderHistory() {
   const { orders, reorder } = useCart();
   const { isAuthenticated, user } = useAuth();
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   
-  // Guest tracking by Order ID states
-  const [trackOrderId, setTrackOrderId] = useState("");
-  const [guestOrder, setGuestOrder] = useState<Order | null>(null);
-  const [guestTrackError, setGuestTrackError] = useState<string | null>(null);
-  const [isTrackLoading, setIsTrackLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-
-  // Guest order history stashed in localStorage
-  const [localGuestOrders, setLocalGuestOrders] = useState<Order[]>([]);
-  const [isLocalGuestsLoading, setIsLocalGuestsLoading] = useState(false);
-
-  // Load and fetch live updates for stashed guest order IDs
-  useEffect(() => {
-    if (!isAuthenticated) {
-      const savedGuests = localStorage.getItem("cakbud_guest_order_ids");
-      if (savedGuests) {
-        try {
-          const guestIds: string[] = JSON.parse(savedGuests);
-          if (guestIds.length > 0) {
-            setIsLocalGuestsLoading(true);
-            const fetchGuestStatuses = async () => {
-              const updatedGuests: Order[] = [];
-              
-              for (const id of guestIds) {
-                try {
-                  const res = await orderService.trackGuestOrder(id);
-                  if (res.status === 200) {
-                    const resData = res.data;
-                    const o = resData.data || resData.order;
-                    if (o) {
-                      const apiItems = o.orderItems || o.items || [];
-                      const mappedItems: CartItem[] = apiItems.map((item: any) => ({
-                        id: item.menuItem?.id || item.menuItemId || "",
-                        name: item.menuItem?.name || item.name || "Menu",
-                        price: Number(item.menuItem?.price || item.price || 0),
-                        quantity: Number(item.quantity || 1),
-                        image: item.menuItem?.imageUrl || item.image || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80"
-                      }));
-                      const dateObj = new Date(o.createdAt || o.date);
-                      updatedGuests.push({
-                        id: o.id,
-                        items: mappedItems,
-                        total: Number(o.total || o.totalPrice || 0),
-                        status: o.status === "CANCELED" ? "CANCELLED" : (o.status || "PENDING"),
-                        date: dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
-                        time: dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
-                        estimatedTime: "20-30 Menit",
-                        phone: o.phone || o.customerPhone || o.guestPhone || "",
-                        customerName: o.guestName || o.customerName || "Tamu"
-                      });
-                    }
-                  }
-                } catch (e) {
-                  console.error("Failed to fetch stashed guest order status:", e);
-                }
-              }
-              const sortedGuests = updatedGuests.sort((a, b) => {
-                const isActive = (status: Order["status"]) => status === "PENDING" || status === "PROCESSING";
-                const aActive = isActive(a.status);
-                const bActive = isActive(b.status);
-                if (aActive && !bActive) return -1;
-                if (!aActive && bActive) return 1;
-                const dateA = new Date(a.createdAt || a.date).getTime();
-                const dateB = new Date(b.createdAt || b.date).getTime();
-                return dateB - dateA;
-              });
-              setLocalGuestOrders(sortedGuests);
-              setIsLocalGuestsLoading(false);
-            };
-            fetchGuestStatuses();
-          }
-        } catch (e) {
-          console.error("Failed to parse stashed guest IDs:", e);
-        }
-      }
-    }
-  }, [isAuthenticated]);
-
-  const handleCopyId = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(id);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleTrackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!trackOrderId.trim()) return;
-    setIsTrackLoading(true);
-    setGuestTrackError(null);
-    setGuestOrder(null);
-    setHasSearched(true);
-
-    try {
-      const response = await orderService.trackGuestOrder(trackOrderId.trim());
-      
-      if (response.status !== 200) {
-        throw new Error("Pesanan tidak ditemukan. Silakan periksa kembali ID Pesanan Anda.");
-      }
-      
-      const resData = response.data;
-      if (resData.success === false) {
-        throw new Error(resData.message || "Pesanan tidak ditemukan.");
-      }
-      const o = resData.data || resData.order;
-      if (!o) {
-        throw new Error("Detail pesanan tidak ditemukan.");
-      }
-      
-      const apiItems = o.orderItems || o.items || [];
-      const mappedItems: CartItem[] = apiItems.map((item: any) => ({
-        id: item.menuItem?.id || item.menuItemId || "",
-        name: item.menuItem?.name || item.name || "Menu",
-        price: Number(item.menuItem?.price || item.price || 0),
-        quantity: Number(item.quantity || 1),
-        image: item.menuItem?.imageUrl || item.image || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80"
-      }));
-      
-      const dateObj = new Date(o.createdAt || o.date);
-      const mappedOrder: Order = {
-        id: o.id,
-        items: mappedItems,
-        total: Number(o.total || o.totalPrice || 0),
-        status: o.status === "CANCELED" ? "CANCELLED" : (o.status || "PENDING"),
-        date: dateObj.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }),
-        time: dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
-        estimatedTime: "20-30 Menit",
-        phone: o.phone || o.customerPhone || o.guestPhone || "",
-        customerName: o.guestName || o.customerName || "Tamu"
-      };
-      
-      setGuestOrder(mappedOrder);
-
-      // Add to stashed search list automatically if not already there
-      const savedGuests = localStorage.getItem("cakbud_guest_order_ids");
-      let guestList: string[] = [];
-      if (savedGuests) {
-        try { guestList = JSON.parse(savedGuests); } catch {}
-      }
-      if (!guestList.includes(mappedOrder.id)) {
-        guestList.push(mappedOrder.id);
-        localStorage.setItem("cakbud_guest_order_ids", JSON.stringify(guestList));
-        setLocalGuestOrders(prev => [mappedOrder, ...prev]);
-      }
-    } catch (err: any) {
-      setGuestTrackError(err.message || "Gagal melacak pesanan. Periksa koneksi internet Anda.");
-    } finally {
-      setIsTrackLoading(false);
-    }
-  };
-
-
-
-  const displayedMemberOrders = React.useMemo(() => {
-    if (isAuthenticated && user) {
-      return [...orders].sort((a, b) => {
-        const isActive = (status: Order["status"]) => status === "PENDING" || status === "PROCESSING";
-        const aActive = isActive(a.status);
-        const bActive = isActive(b.status);
-
-        // Active orders always come first
-        if (aActive && !bActive) return -1;
-        if (!aActive && bActive) return 1;
-
-        // Within same group: newest first
-        const dateA = new Date(a.createdAt || a.date).getTime();
-        const dateB = new Date(b.createdAt || b.date).getTime();
-        return dateB - dateA;
-      });
-    }
-    return [];
-  }, [orders, isAuthenticated, user]);
+  const {
+    copiedId,
+    trackOrderId,
+    setTrackOrderId,
+    guestOrder,
+    guestTrackError,
+    isTrackLoading,
+    hasSearched,
+    localGuestOrders,
+    isLocalGuestsLoading,
+    handleCopyId,
+    handleTrackSubmit,
+    displayedMemberOrders,
+  } = useOrderHistory(orders, isAuthenticated, user, reorder);
 
   return (
     <div className="space-y-6">
@@ -473,7 +314,7 @@ export function OrderHistory() {
                       <p className="text-[10px] text-stone-700 font-bold">
                         Pemesan: {order.customerName === "Member" && user?.name ? user.name : (order.customerName || "Member")} {(order.phone || user?.phone) ? `(${order.phone || user?.phone})` : ""}
                       </p>
-                      <p className="text-[10px] text-stone-400 font-semibold">{order.date} pukul {order.time}</p>
+                      <p className="text-[10px] text-stone-450 font-semibold">{order.date} pukul {order.time}</p>
                     </div>
                     <StatusBadge status={order.status} />
                   </div>
@@ -488,7 +329,7 @@ export function OrderHistory() {
                     ))}
                   </div>
 
-                  {/* Total Payment & Reorder (MEMBERS ONLY CAN REORDER) */}
+                  {/* Total Payment & Reorder */}
                   <div className="flex justify-between items-center border-t border-stone-100 pt-3 text-xs">
                     <div>
                       <p className="text-[9px] text-stone-400 font-medium leading-none">Total Pembayaran</p>

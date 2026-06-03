@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { paymentService } from "@/lib/services";
+import React from "react";
 import { 
   FiSearch, FiGrid, FiList, FiRefreshCw, FiXCircle
 } from "react-icons/fi";
@@ -13,107 +12,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FinanceStatsCards } from "@/components/admin/FinanceStatsCards";
-import { FinanceTable, Payment, PaymentOrder } from "@/components/admin/FinanceTable";
+import { FinanceTable } from "@/components/admin/FinanceTable";
+import { useAdminFinance } from "./hooks/useAdminFinance";
 
 export default function AdminFinancePage() {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Filter & Search states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [methodFilter, setMethodFilter] = useState("ALL");
-  const [statusFilter, setStatusFilter] = useState("PAID");
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
-
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-
-  const fetchPayments = async (showRefreshIndicator = false) => {
-    if (showRefreshIndicator) setIsRefreshing(true);
-    try {
-      const response = await paymentService.getPayments();
-      const resData = response.data;
-      if (resData.success === false) {
-        throw new Error(resData.message || "Gagal mengambil data keuangan");
-      }
-      setPayments(resData.data || []);
-      setError(null);
-    } catch (err: any) {
-      console.error("Gagal memuat data keuangan admin:", err);
-      setError(err.response?.data?.message || err.message || "Gagal menghubungi server.");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  // Initial Fetch & Poll every 15 seconds
-  useEffect(() => {
-    fetchPayments();
-    const interval = setInterval(() => fetchPayments(true), 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Reset pagination to page 1 on filter updates
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, methodFilter, statusFilter]);
-
-  // Compute calculated metrics
-  const paidPayments = payments.filter(p => p.status === "PAID");
-  const totalRevenue = paidPayments.reduce((sum, p) => sum + p.amount, 0);
-  const totalTransactions = paidPayments.length;
-  const averageOrderValue = totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0;
-
-  // Compute order type metrics
-  const dineInRevenue = paidPayments.filter(p => p.order?.orderType === "DINE_IN").reduce((sum, p) => sum + p.amount, 0);
-  const takeAwayRevenue = paidPayments.filter(p => p.order?.orderType === "TAKE_AWAY").reduce((sum, p) => sum + p.amount, 0);
-  const dineInPercent = totalRevenue > 0 ? Math.round((dineInRevenue / totalRevenue) * 100) : 0;
-  const takeAwayPercent = totalRevenue > 0 ? Math.round((takeAwayRevenue / totalRevenue) * 100) : 0;
-
-  // Compute payment method counts
-  const methodCounts = paidPayments.reduce((acc, p) => {
-    const m = p.method || "UNKNOWN";
-    acc[m] = (acc[m] || 0) + p.amount;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Filtered payments list
-  const filteredPayments = payments.filter(p => {
-    // Search filter
-    const custName = p.order?.user?.name || p.order?.guestName || "Tamu";
-    const matchesSearch = 
-      p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      custName.toLowerCase().includes(searchQuery.toLowerCase());
-
-    // Method filter
-    const matchesMethod = methodFilter === "ALL" || p.method === methodFilter;
-
-    // Status filter
-    const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
-
-    return matchesSearch && matchesMethod && matchesStatus;
-  });
-
-  // Paginated payments list
-  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
-  const paginatedPayments = filteredPayments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  // Helper to format dates
-  const formatDateTime = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleString("id-ID", {
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit"
-      });
-    } catch {
-      return dateStr;
-    }
-  };
+  const {
+    isLoading,
+    error,
+    isRefreshing,
+    searchQuery,
+    setSearchQuery,
+    methodFilter,
+    setMethodFilter,
+    statusFilter,
+    setStatusFilter,
+    viewMode,
+    setViewMode,
+    currentPage,
+    setCurrentPage,
+    fetchPayments,
+    totalRevenue,
+    totalTransactions,
+    averageOrderValue,
+    dineInRevenue,
+    takeAwayRevenue,
+    dineInPercent,
+    takeAwayPercent,
+    methodCounts,
+    totalPages,
+    paginatedPayments,
+    formatDateTime,
+  } = useAdminFinance();
 
   return (
     <div className="space-y-6 animate-fade-in text-stone-850">
